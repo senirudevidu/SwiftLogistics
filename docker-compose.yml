@@ -13,16 +13,6 @@ services:
     depends_on:
       - db
 
-  frontend:
-    build: ./frontend
-    container_name: react_native_frontend
-    ports:
-      - "19000:19000"
-    volumes:
-      - ./frontend:/app
-    environment:
-      - REACT_NATIVE_PACKAGER_HOST=0.0.0.0
-
   db:
     image: postgres:15
     container_name: postgres_db
