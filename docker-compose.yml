@@ -1,30 +1,126 @@
 version: "3.9"
 
 services:
-  backend:
-    build: ./backend
-    container_name: fastapi_backend
+  # -----------------------------
+  # RabbitMQ - Event Bus
+  # -----------------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP broker
+      - "15672:15672" # RabbitMQ management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # -----------------------------
+  # API Gateway
+  # -----------------------------
+  api-gateway:
+    build: ./backend/services/api-gateway
+    container_name: api-gateway
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
-    env_file:
-      - .env
     depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    container_name: postgres_db
-    restart: always
+      - auth-service
+      - order-service
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - ORDER_SERVICE_URL=http://order-service:8002
 
-volumes:
-  pgdata:
+  # -----------------------------
+  # Authentication Service
+  # -----------------------------
+  auth-service:
+    build: ./backend/services/auth-service
+    container_name: auth-service
+    ports:
+      - "8001:8000"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+
+  # -----------------------------
+  # Admin Service
+  # -----------------------------
+  admin-service:
+    build: ./backend/services/admin-service
+    container_name: admin-service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - auth-service
+      - cms-mock
+    environment:
+      - CMS_URL=http://cms-mock:8200
+
+  # -----------------------------
+  # Order Service
+  # -----------------------------
+  order-service:
+    build: ./backend/services/order-service
+    container_name: order-service
+    ports:
+      - "8002:8000"
+    depends_on:
+      - rabbitmq
+      - cms-mock
+      - ros-mock
+      - wms-mock
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - CMS_URL=http://cms-mock:8200
+      - ROS_URL=http://ros-mock:8100
+      - WMS_HOST=wms-mock
+      - WMS_PORT=8300
+
+  # -----------------------------
+  # Tracking Service
+  # -----------------------------
+  tracking-service:
+    build: ./backend/services/tracking-service
+    container_name: tracking-service
+    ports:
+      - "8004:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+
+  # -----------------------------
+  # Notification Service
+  # -----------------------------
+  notification-service:
+    build: ./backend/services/notification-service
+    container_name: notification-service
+    ports:
+      - "8005:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+
+  # -----------------------------
+  # Mock Systems
+  # -----------------------------
+  cms-mock:
+    build: ./backend/services/mock_systems/cms
+    container_name: cms-mock
+    ports:
+      - "8200:8200"
+
+  ros-mock:
+    build: ./backend/services/mock_systems/ros
+    container_name: ros-mock
+    ports:
+      - "8100:8100"
+
+  wms-mock:
+    build: ./backend/services/mock_systems/wms
+    container_name: wms-mock
+    ports:
+      - "8300:8300"

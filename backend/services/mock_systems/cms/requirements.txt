@@ -1,0 +1,3 @@
+spyne==2.13.15          # SOAP server library
+lxml==4.9.3            # Required by spyne for XML parsing
+requests==2.32.0       # Optional, if your adapters call CMS via HTTP
