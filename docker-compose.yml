@@ -1,6 +1,24 @@
-version: "3.9"
-
 services:
+  # -----------------------------
+  # PostgreSQL Database
+  # -----------------------------
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: swiftlog_user
+      POSTGRES_PASSWORD: swiftlog_pass
+      POSTGRES_DB: swiftlog_db
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admins
+    ports:
+      - "5050:80"
+
   # -----------------------------
   # RabbitMQ - Event Bus
   # -----------------------------
@@ -23,6 +41,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      - postgres
       - auth-service
       - order-service
     environment:
@@ -37,9 +56,12 @@ services:
     container_name: auth-service
     ports:
       - "8001:8000"
+    depends_on:
+      - postgres
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
   # Admin Service
@@ -52,8 +74,10 @@ services:
     depends_on:
       - auth-service
       - cms-mock
+      - postgres
     environment:
       - CMS_URL=http://cms-mock:8200
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
   # Order Service
@@ -68,6 +92,7 @@ services:
       - cms-mock
       - ros-mock
       - wms-mock
+      - postgres
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -75,6 +100,7 @@ services:
       - ROS_URL=http://ros-mock:8100
       - WMS_HOST=wms-mock
       - WMS_PORT=8300
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
   # Tracking Service
@@ -86,9 +112,11 @@ services:
       - "8004:8000"
     depends_on:
       - rabbitmq
+      - postgres
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
   # Notification Service
@@ -100,9 +128,11 @@ services:
       - "8005:8000"
     depends_on:
       - rabbitmq
+      - postgres
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
   # Mock Systems
@@ -112,15 +142,20 @@ services:
     container_name: cms-mock
     ports:
       - "8200:8200"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   ros-mock:
     build: ./backend/services/mock_systems/ros
     container_name: ros-mock
     ports:
       - "8100:8100"
-
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
   wms-mock:
     build: ./backend/services/mock_systems/wms
     container_name: wms-mock
     ports:
       - "8300:8300"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
