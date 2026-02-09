@@ -4,12 +4,15 @@ services:
   # -----------------------------
   postgres:
     image: postgres:15
+    container_name: postgres
     environment:
       POSTGRES_USER: swiftlog_user
       POSTGRES_PASSWORD: swiftlog_pass
       POSTGRES_DB: swiftlog_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -159,3 +162,6 @@ services:
       - "8300:8300"
     environment:
       - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
+
+volumes:
+  postgres_data:
