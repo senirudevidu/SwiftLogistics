@@ -7,5 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app
 
-# Run SOAP server with Python
-CMD ["python", "app/cms_mock.py"]
+CMD ["uvicorn", "app.cms:app", "--host", "0.0.0.0", "--port", "8200"]
