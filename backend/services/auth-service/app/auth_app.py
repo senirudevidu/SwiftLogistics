@@ -1,3 +1,4 @@
+import requests
 from fastapi import FastAPI, HTTPException, Depends # type: ignore
 from fastapi.security import OAuth2PasswordBearer # type: ignore
 from datetime import datetime, timedelta, timezone
@@ -59,6 +60,10 @@ def read_root():
 async def create_user(user: UserCreate):
     hashed_password = pwd_context.hash(user.password)
     new_user = User(username=user.username, password_hash=hashed_password, role=user.role)
+    if user.role == "client":
+        client = requests.post("http://cms_adapter:8201/users", json={"name": user.name, "email": user.email}).json()
+    elif user.role == "driver":
+        driver = requests.post("http://driver-service:8000/users", json={"name": user.name, "email": user.email}).json()
     async with SessionLocal() as session:
         session.add(new_user)
         await session.commit()

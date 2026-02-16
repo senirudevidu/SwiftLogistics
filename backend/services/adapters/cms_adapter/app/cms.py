@@ -1,13 +1,11 @@
-from fastapi import FastAPI # type: ignore
+from fastapi import FastAPI
 import logging
 
 from app.database import SessionLocal, engine
-from app.models import Drivers, Base
+from app.models import Clients, Base
+from app.schemas import UserCreateRequest
 
-from app.schemas import UserCreate
-
-
-app = FastAPI(title="Driver Service")
+app = FastAPI(title="Mock CMS Service")
 
 async def get_db():
     async with SessionLocal() as session:
@@ -24,13 +22,13 @@ async def startup_event():
 
 @app.get("/")
 async def read_root():
-    return {"message": "Welcome to the Driver Service!"}
+    return {"message": "Welcome to the Mock CMS Service!"}
 
 @app.post("/users")
-async def create_user(user: UserCreate):
-    new_driver = Drivers(name=user.name, email=user.email)
+async def create_user(user: UserCreateRequest):
+    new_client = Clients(name=user.name, email=user.email)
     async with SessionLocal() as session:
-        session.add(new_driver)
+        session.add(new_client)
         await session.commit()
-        await session.refresh(new_driver)
-    return {"message": f"User {new_driver.name} created successfully."}
+        await session.refresh(new_client)
+    return {"message": f"User {new_client.name} created successfully."}

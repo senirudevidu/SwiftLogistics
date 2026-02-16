@@ -179,5 +179,38 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
+  # -----------------------------
+  # Adapters
+  # -----------------------------
+  cms-adapter:
+    build: ./backend/services/adapters/cms
+    container_name: cms-adapter
+    ports:
+      - "8201:8000"
+    depends_on:
+      - cms-mock
+    environment:
+      - CMS_URL=http://cms-mock:8200
+
+  ros-adapter:
+    build: ./backend/services/adapters/ros
+    container_name: ros-adapter
+    ports:
+      - "8101:8000"
+    depends_on:
+      - ros-mock
+    environment:
+      - ROS_URL=http://ros-mock:8100
+
+  wms-adapter:
+    build: ./backend/services/adapters/wms
+    container_name: wms-adapter
+    ports:
+      - "8301:8000"
+    depends_on:
+      - wms-mock
+    environment:
+      - WMS_URL=http://wms-mock:8300
+
 volumes:
   postgres_data:
