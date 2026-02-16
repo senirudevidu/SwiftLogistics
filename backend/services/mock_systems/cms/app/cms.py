@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import Response
+from fastapi import FastAPI, Request, HTTPException # type: ignore
+from fastapi.responses import Response # type: ignore
 import logging
 import xml.etree.ElementTree as ET
 

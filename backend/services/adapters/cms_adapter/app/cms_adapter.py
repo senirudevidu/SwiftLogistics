@@ -1,7 +1,7 @@
 import os
 import httpx
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException # type: ignore
 from app.schemas import UserCreateRequest
 
 app = FastAPI(title="CMS Adapter Service")
