@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI # type: ignore
 import logging
 
-from app.database import SessionLocal, engine
-from app.models import Clients, Base
+from app.database import SessionLocal, engine # type: ignore
+from app.models import Clients, Base # type: ignore
 from app.schemas import UserCreateRequest
 
 app = FastAPI(title="Mock CMS Service")
