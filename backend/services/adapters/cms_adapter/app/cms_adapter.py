@@ -1,3 +1,4 @@
+import os
 import httpx
 import logging
 from fastapi import FastAPI, HTTPException
@@ -5,7 +6,7 @@ from app.schemas import UserCreateRequest
 
 app = FastAPI(title="CMS Adapter Service")
 
-CMS_URL = "http://cms:8000"
+CMS_URL = os.getenv("CMS_URL", "http://cms-mock:8200")
 
 def json_to_soap_xml(user: UserCreateRequest) -> str:
     """Convert JSON user data to SOAP XML envelope for CMS legacy system"""

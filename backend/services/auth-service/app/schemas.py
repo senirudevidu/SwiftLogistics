@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     role: str
+    vehicle_number: str = None
 
 class LoginRequest(BaseModel):
     username: str

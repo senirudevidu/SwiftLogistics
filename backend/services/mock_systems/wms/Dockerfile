@@ -5,4 +5,4 @@ WORKDIR /app
 COPY app/ ./app
 
 # No requirements needed for basic socket
-CMD ["python", "app/wms_mock.py"]
+CMD ["python", "app/wms.py"]

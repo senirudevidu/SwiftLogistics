@@ -28,7 +28,7 @@ async def read_root():
 
 @app.post("/users")
 async def create_user(user: UserCreate):
-    new_driver = Drivers(name=user.name, email=user.email)
+    new_driver = Drivers(name=user.name, email=user.email, vehicle_number=user.vehicle_number)
     async with SessionLocal() as session:
         session.add(new_driver)
         await session.commit()
