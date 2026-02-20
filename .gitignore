@@ -11,6 +11,13 @@ backend/.env
 backend/*.sqlite
 backend/__pycache__/
 *.log
+backend/services/order-service/app/pycache/
+backend/services/api-gateway/app/pycache/
+backend/services/adapters/cms_adapter/app/pycache/
+backend/services/auth-service/app/pycache/
+backend/services/driver-service/app/pycache/
+backend/pycache/
+pycache/
 
 # ===========================
 # Frontend (React Native / Expo)
