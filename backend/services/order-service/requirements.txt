@@ -3,3 +3,5 @@ uvicorn
 sqlalchemy
 asyncpg
 psycopg2-binary
+httpx
+pika
