@@ -105,7 +105,7 @@ async def login(request: LoginRequest):
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "username": user.username, "role": user.role}
 
 
 @app.get("/me")

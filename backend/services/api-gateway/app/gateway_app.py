@@ -1,7 +1,17 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 import httpx
 
 app = FastAPI(title="API Gateway")
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():
@@ -9,10 +19,22 @@ async def root():
 
 @app.post("/login")
 async def login(request: Request):
-    credentials = await request.json()
+    # Handle both form data (from frontend) and JSON
+    content_type = request.headers.get("content-type", "")
+    if "application/x-www-form-urlencoded" in content_type:
+        form_data = await request.form()
+        credentials = {"username": form_data.get("username"), "password": form_data.get("password")}
+    else:
+        credentials = await request.json()
+    
     async with httpx.AsyncClient() as client:
-        response = await client.post("http://auth-service:8001/login", json=credentials)
-    return await response.json()
+        response = await client.post("http://auth-service:8000/login", json=credentials)
+        # Return with proper status code
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            media_type="application/json"
+        )
 
 @app.post("/order")
 async def create_order(request: Request):
