@@ -52,6 +52,22 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
     logging.info("Database tables recreated successfully.")
 
+    # Add default users for admin, client, and driver dashboards
+    async with SessionLocal() as session:
+        users = [
+            {"username": "admin", "password": "admin123", "role": "admin"},
+            {"username": "client", "password": "client123", "role": "client"},
+            {"username": "driver", "password": "driver123", "role": "driver"}
+        ]
+        for u in users:
+            result = await session.execute(select(User).where(User.username == u["username"]))
+            existing = result.scalar_one_or_none()
+            if not existing:
+                hashed_password = pwd_context.hash(u["password"])
+                new_user = User(username=u["username"], password_hash=hashed_password, role=u["role"])
+                session.add(new_user)
+        await session.commit()
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Authentication Service!"}

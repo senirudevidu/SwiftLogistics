@@ -3,9 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select # type: ignore
 from typing import List
 import logging
+from app.schemas import CreateOrder
 
 from app.database import SessionLocal, engine
 from app.models import Order, Base
+
+from app.rabbitmq_publisher import publish_order
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,3 +35,20 @@ async def startup():
 @app.get("/")
 async def root():
     return {"service": "Order Service", "status": "running"}
+
+@app.post("/create")
+async def create_order(order: CreateOrder, db: AsyncSession = Depends(get_db)):
+    new_order = Order(
+        client_id=order.customer_id,
+        status="pending"
+    )
+    db.add(new_order)
+    await db.commit()
+    await db.refresh(new_order)
+    logger.info(f"Created new order with ID: {new_order.order_id}")
+    publish_order({
+        "order_id": new_order.order_id,
+        "client_id": new_order.client_id,
+        "status": new_order.status
+    })
+    return {"message": "Order created successfully", "order_id": new_order.order_id}
