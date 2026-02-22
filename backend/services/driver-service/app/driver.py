@@ -51,7 +51,6 @@ async def get_drivers():
                 "driver_id": d.driver_id,
                 "name": d.name,
                 "vehicle_number": d.vehicle_number,
-                "email": d.email
             }
             for d in drivers
         ]
