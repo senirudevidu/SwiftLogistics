@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-from fastapi import FastAPI, Request # type: ignore
-=======
 from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from jose import jwt, JWTError
->>>>>>> frontend
 import httpx
 import logging
 

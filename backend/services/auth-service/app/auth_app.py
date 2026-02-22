@@ -71,6 +71,10 @@ async def on_startup():
                 new_user = User(username=u["username"], password_hash=hashed_password, role=u["role"])
                 session.add(new_user)
         await session.commit()
+        # Log all users after creation for debugging
+        result = await session.execute(select(User))
+        all_users = result.scalars().all()
+        logger.info(f"Users in DB after startup: {[{'username': u.username, 'role': u.role} for u in all_users]}")
 
 @app.get("/")
 def read_root():
