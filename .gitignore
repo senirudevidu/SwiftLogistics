@@ -1,15 +1,16 @@
 # ===========================
+# Python
+# ===========================
+__pycache__/
+*.pyc
+*.pyo
+
+# ===========================
 # Backend (Python / FastAPI)
 # ===========================
 backend/venv/
-backend/__pycache__/
-backend/services/adapters/cms_adapter/app/__pycache__/
-backend/services/auth-service/app/__pycache__/
-backend/services/driver-service/app/__pycache__/
-backend/*.pyc
 backend/.env
 backend/*.sqlite
-backend/__pycache__/
 *.log
 backend/services/order-service/app/pycache/
 backend/services/api-gateway/app/pycache/

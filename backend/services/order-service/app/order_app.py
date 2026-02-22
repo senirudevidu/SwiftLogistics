@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select # type: ignore
 from typing import List
 import logging
-from app.schemas import CreateOrder
+from app.schemas import CreateOrder, UpdateOrderStatus, AssignDriver
 
 from app.database import SessionLocal, engine
 from app.models import Order, Base
@@ -40,6 +40,7 @@ async def root():
 async def create_order(order: CreateOrder, db: AsyncSession = Depends(get_db)):
     new_order = Order(
         client_id=order.customer_id,
+        delivery_address=order.delivery_address,
         status="pending"
     )
     db.add(new_order)
@@ -49,6 +50,34 @@ async def create_order(order: CreateOrder, db: AsyncSession = Depends(get_db)):
     publish_order({
         "order_id": new_order.order_id,
         "client_id": new_order.client_id,
+        "delivery_address": new_order.delivery_address,
         "status": new_order.status
     })
     return {"message": "Order created successfully", "order_id": new_order.order_id}
+
+@app.put("/update-status")
+async def update_order_status(data: UpdateOrderStatus, db: AsyncSession = Depends(get_db)):
+    """Update order status (called by WMS Adapter)"""
+    result = await db.execute(select(Order).where(Order.order_id == data.order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {data.order_id} not found")
+    order.status = data.status
+    await db.commit()
+    await db.refresh(order)
+    logger.info(f"Order {data.order_id} status updated to: {data.status}")
+    return {"message": f"Order {data.order_id} status updated to {data.status}"}
+
+@app.put("/assign-driver")
+async def assign_driver(data: AssignDriver, db: AsyncSession = Depends(get_db)):
+    """Assign a driver to an order (called by ROS Adapter)"""
+    result = await db.execute(select(Order).where(Order.order_id == data.order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {data.order_id} not found")
+    order.driver_id = data.driver_id
+    await db.commit()
+    await db.refresh(order)
+    logger.info(f"Order {data.order_id} assigned to driver: {data.driver_id}")
+    return {"message": f"Order {data.order_id} assigned to driver {data.driver_id}"}
+

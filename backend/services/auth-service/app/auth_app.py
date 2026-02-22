@@ -1,11 +1,11 @@
 import requests
-from fastapi import FastAPI, HTTPException, Depends # type: ignore
-from fastapi.security import OAuth2PasswordBearer # type: ignore
+from fastapi import FastAPI, HTTPException, Depends  # type: ignore
+from fastapi.security import OAuth2PasswordBearer  # type: ignore
 from datetime import datetime, timedelta, timezone
 import logging
-from jose import jwt, JWTError # type: ignore
-from passlib.context import CryptContext # type: ignore
-from sqlalchemy.future import select # type: ignore
+from jose import jwt, JWTError  # type: ignore
+from passlib.context import CryptContext  # type: ignore
+from sqlalchemy.future import select  # type: ignore
 
 from app.database import engine, Base, SessionLocal
 from app.models import User, Base
@@ -20,6 +20,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -33,7 +36,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         role: str = payload.get("role")
         if username is None:
             raise credentials_exception
-        return {"username": username, "role": role}
+        return payload
     except JWTError:
         raise credentials_exception
 
@@ -52,6 +55,22 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
     logging.info("Database tables recreated successfully.")
 
+    # Add default users for admin, client, and driver dashboards
+    async with SessionLocal() as session:
+        users = [
+            {"username": "admin", "password": "admin123", "role": "admin"},
+            {"username": "client", "password": "client123", "role": "client"},
+            {"username": "driver", "password": "driver123", "role": "driver"}
+        ]
+        for u in users:
+            result = await session.execute(select(User).where(User.username == u["username"]))
+            existing = result.scalar_one_or_none()
+            if not existing:
+                hashed_password = pwd_context.hash(u["password"])
+                new_user = User(username=u["username"], password_hash=hashed_password, role=u["role"])
+                session.add(new_user)
+        await session.commit()
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Authentication Service!"}
@@ -60,15 +79,53 @@ def read_root():
 async def create_user(user: UserCreate):
     hashed_password = pwd_context.hash(user.password)
     new_user = User(username=user.username, password_hash=hashed_password, role=user.role)
+
+    # For clients: create in CMS via adapter, get back client_id
+    client_id = None
+    driver_id = None
+
     if user.role == "client":
-        client = requests.post("http://cms-adapter:8000/users", json={"name": user.name, "email": user.email}).json()
+        try:
+            resp = requests.post("http://cms-adapter:8000/users", json={"name": user.name, "email": user.email})
+            resp.raise_for_status()
+            logger.info(f"CMS adapter response: {resp.json()}")
+            # Parse client_id from CMS SOAP response message
+            cms_data = resp.json()
+            # The CMS response message contains "created successfully with ID <n>"
+            msg = cms_data.get("cms_response", "")
+            if "ID " in msg:
+                # Extract the ID that appears right after "ID "
+                import re
+                match = re.search(r'ID\s+(\d+)', msg)
+                if match:
+                    client_id = int(match.group(1))
+                    logger.info(f"Extracted client_id from CMS: {client_id}")
+        except Exception as e:
+            logger.error(f"Error creating client in CMS: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to create client in CMS: {str(e)}")
     elif user.role == "driver":
-        driver = requests.post("http://driver-service:8000/users", json={"name": user.name, "email": user.email, "vehicle_number": user.vehicle_number}).json()
+        try:
+            resp = requests.post("http://driver-service:8000/users", json={"name": user.name, "email": user.email, "vehicle_number": user.vehicle_number})
+            resp.raise_for_status()
+            logger.info(f"Driver service response: {resp.json()}")
+        except Exception as e:
+            logger.error(f"Error creating driver: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to create driver: {str(e)}")
+
+    # Store client_id in the users table if applicable
+    if client_id is not None:
+        new_user.client_id = client_id
+
     async with SessionLocal() as session:
+        # Check if username already exists
+        existing = await session.execute(select(User).where(User.username == user.username))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail=f"Username '{user.username}' already exists")
         session.add(new_user)
         await session.commit()
         await session.refresh(new_user)
-    return {"message": f"User {new_user.username} created successfully."}
+
+    return {"message": f"User {new_user.username} created successfully.", "user_id": new_user.id, "client_id": client_id}
 
 @app.post("/login")
 async def login(request: LoginRequest):
@@ -87,14 +144,20 @@ async def login(request: LoginRequest):
         "role": user.role,
         "exp": expire
     }
+    # Include client_id for client users so orders can extract it
+    if user.role == "client" and user.client_id is not None:
+        payload["client_id"] = user.client_id
+
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "username": user.username, "role": user.role}
 
 
 @app.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user info (protected endpoint)"""
     return {
-        "Hello World"
+        "username": current_user.get("sub"),
+        "role": current_user.get("role"),
+        "client_id": current_user.get("client_id"),
     }
