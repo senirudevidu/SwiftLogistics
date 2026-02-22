@@ -1,5 +1,6 @@
 import requests
-from fastapi import FastAPI, HTTPException, Depends  # type: ignore
+from typing import Optional
+from fastapi import FastAPI, HTTPException, Depends, Query  # type: ignore
 from fastapi.security import OAuth2PasswordBearer  # type: ignore
 from datetime import datetime, timedelta, timezone
 import logging
@@ -161,3 +162,24 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "role": current_user.get("role"),
         "client_id": current_user.get("client_id"),
     }
+
+
+@app.get("/users")
+async def list_users(role: Optional[str] = Query(None)):
+    """List all users, optionally filtered by role."""
+    async with SessionLocal() as session:
+        if role:
+            result = await session.execute(select(User).where(User.role == role))
+        else:
+            result = await session.execute(select(User))
+        users = result.scalars().all()
+        return [
+            {
+                "id": u.id,
+                "username": u.username,
+                "role": u.role,
+                "client_id": u.client_id,
+                "is_active": True,
+            }
+            for u in users
+        ]

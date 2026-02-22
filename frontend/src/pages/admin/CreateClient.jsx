@@ -5,7 +5,7 @@ import { adminAPI } from '../../api'
 
 export default function CreateClient() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', email: '', password: '', company_name: '' })
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -14,12 +14,12 @@ export default function CreateClient() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.username || !form.password) { setError('Username and password are required.'); return }
+    if (!form.username || !form.password || !form.name) { setError('Name, username and password are required.'); return }
     setLoading(true); setError('')
     try {
       await adminAPI.createClient(form)
       setSuccess(`Client "${form.username}" created successfully!`)
-      setForm({ username: '', email: '', password: '', company_name: '' })
+      setForm({ name: '', username: '', email: '', password: '' })
     } catch (err) {
       const msg = err.response?.data?.detail
       setError(typeof msg === 'string' ? msg : 'Failed to create client.')
@@ -39,8 +39,12 @@ export default function CreateClient() {
             {success && <div className="alert alert-success">{success}</div>}
             <form onSubmit={handleSubmit} noValidate>
               <div className="form-group">
+                <label>Full Name *</label>
+                <input name="name" value={form.name} onChange={handleChange} placeholder="e.g. John Perera" autoFocus />
+              </div>
+              <div className="form-group">
                 <label>Username *</label>
-                <input name="username" value={form.username} onChange={handleChange} placeholder="e.g. shopone_lk" autoFocus />
+                <input name="username" value={form.username} onChange={handleChange} placeholder="e.g. shopone_lk" />
               </div>
               <div className="form-group">
                 <label>Email</label>
@@ -49,10 +53,6 @@ export default function CreateClient() {
               <div className="form-group">
                 <label>Password *</label>
                 <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Minimum 8 characters" />
-              </div>
-              <div className="form-group">
-                <label>Company Name</label>
-                <input name="company_name" value={form.company_name} onChange={handleChange} placeholder="e.g. ShopOne Lanka (Pvt) Ltd." />
               </div>
               <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? <><span className="spinner" /> Creating…</> : 'Create Client'}
