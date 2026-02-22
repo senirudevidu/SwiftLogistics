@@ -12,7 +12,7 @@ async def login(request: Request):
     credentials = await request.json()
     async with httpx.AsyncClient() as client:
         response = await client.post("http://auth-service:8001/login", json=credentials)
-    return await response.json()
+    return response.json()
 
 @app.post("/order")
 async def create_order(request: Request):
@@ -21,11 +21,11 @@ async def create_order(request: Request):
         try:
             response = await client.post("http://order-service:8000/create", json=order_data)
             response.raise_for_status()
-            return await response.json()
+            return response.json()
         except httpx.HTTPStatusError as exc:
             # Try to parse the response as JSON; if successful, return it as a normal response
             try:
-                data = await exc.response.json()
+                data = exc.response.json()
                 return data
             except Exception:
                 # If not JSON, return as error with text details
