@@ -49,16 +49,7 @@ services:
       - order-service
     volumes:
       - ./backend/services/api-gateway/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.gateway_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.gateway_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - AUTH_SERVICE_URL=http://auth-service:8001
       - ORDER_SERVICE_URL=http://order-service:8002
@@ -75,16 +66,7 @@ services:
       - postgres
     volumes:
       - ./backend/services/auth-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.auth_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.auth_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -104,16 +86,7 @@ services:
       - postgres
     volumes:
       - ./backend/services/admin-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.admin_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.admin_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - CMS_URL=http://cms-mock:8200
       - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
@@ -134,23 +107,14 @@ services:
       - postgres
     volumes:
       - ./backend/services/order-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.order_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.order_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
-      # - RABBITMQ_HOST=rabbitmq
-      # - RABBITMQ_PORT=5672
-      # - CMS_URL=http://cms-mock:8200
-      # - ROS_URL=http://ros-mock:8100
-      # - WMS_HOST=wms-mock
-      # - WMS_PORT=8300
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - CMS_URL=http://cms-mock:8200
+      - ROS_URL=http://ros-mock:8100
+      - WMS_HOST=wms-mock
+      - WMS_PORT=8300
       - DATABASE_URL=postgresql+asyncpg://swiftlog_user:swiftlog_pass@postgres:5432/swiftlog_db
 
   # -----------------------------
@@ -166,16 +130,7 @@ services:
       - postgres
     volumes:
       - ./backend/services/tracking-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.tracking_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.tracking_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -194,16 +149,7 @@ services:
       - postgres
     volumes:
       - ./backend/services/notification-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.notification_app:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.notification_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -222,16 +168,7 @@ services:
       - postgres
     volumes:
       - ./backend/services/driver-service/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.driver:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.driver:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
@@ -275,16 +212,7 @@ services:
       - cms-mock
     volumes:
       - ./backend/services/adapters/cms_adapter/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.cms_adapter:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "uvicorn", "app.cms_adapter:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     environment:
       - CMS_URL=http://cms-mock:8200
 
@@ -295,20 +223,14 @@ services:
       - "8101:8000"
     depends_on:
       - ros-mock
+      - rabbitmq
     volumes:
       - ./backend/services/adapters/ros_adapter/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.ros_adapter:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "python", "-u", "app/ros_adapter.py" ]
     environment:
       - ROS_URL=http://ros-mock:8100
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
 
   wms-adapter:
     build: ./backend/services/adapters/wms_adapter
@@ -317,20 +239,14 @@ services:
       - "8301:8000"
     depends_on:
       - wms-mock
+      - rabbitmq
     volumes:
       - ./backend/services/adapters/wms_adapter/app:/app/app
-    command:
-      [
-        "uvicorn",
-        "app.wms_adapter:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-      ]
+    command: [ "python", "-u", "app/wms_adapter.py" ]
     environment:
       - WMS_URL=http://wms-mock:8300
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
 
 volumes:
   postgres_data:

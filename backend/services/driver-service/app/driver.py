@@ -5,8 +5,12 @@ from app.database import SessionLocal, engine
 from app.models import Drivers, Base
 
 from app.schemas import UserCreate
+from fastapi import Depends
+from sqlalchemy.future import select
 
 
+
+from typing import List
 app = FastAPI(title="Driver Service")
 
 async def get_db():
@@ -26,6 +30,7 @@ async def startup_event():
 async def read_root():
     return {"message": "Welcome to the Driver Service!"}
 
+
 @app.post("/users")
 async def create_user(user: UserCreate):
     new_driver = Drivers(name=user.name, email=user.email, vehicle_number=user.vehicle_number)
@@ -34,3 +39,18 @@ async def create_user(user: UserCreate):
         await session.commit()
         await session.refresh(new_driver)
     return {"message": f"User {new_driver.name} created successfully."}
+
+# New endpoint to get all drivers
+@app.get("/drivers")
+async def get_drivers():
+    async with SessionLocal() as session:
+        result = await session.execute(select(Drivers))
+        drivers = result.scalars().all()
+        return [
+            {
+                "driver_id": d.driver_id,
+                "name": d.name,
+                "vehicle_number": d.vehicle_number,
+            }
+            for d in drivers
+        ]
