@@ -48,3 +48,41 @@ async def register_user(request: Request):
         except Exception as exc:
             logger.error(f"Error registering user: {exc}")
             raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/clients")
+async def get_clients():
+    """
+    List all client users from the auth-service users table.
+    Proxies to auth-service GET /users?role=client.
+    """
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://auth-service:8000/users", params={"role": "client"})
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            logger.error(f"Error fetching clients: {exc}")
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching clients: {exc}")
+            return []
+
+
+@app.get("/drivers")
+async def get_drivers():
+    """
+    List all driver users from the auth-service users table.
+    Proxies to auth-service GET /users?role=driver.
+    """
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://auth-service:8000/users", params={"role": "driver"})
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            logger.error(f"Error fetching drivers: {exc}")
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching drivers: {exc}")
+            return []

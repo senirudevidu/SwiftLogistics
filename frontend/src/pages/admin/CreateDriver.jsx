@@ -5,7 +5,7 @@ import { adminAPI } from '../../api'
 
 export default function CreateDriver() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', email: '', password: '', phone: '', vehicle_plate: '' })
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', vehicle_number: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -14,12 +14,12 @@ export default function CreateDriver() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.username || !form.password) { setError('Username and password are required.'); return }
+    if (!form.username || !form.password || !form.name) { setError('Name, username and password are required.'); return }
     setLoading(true); setError('')
     try {
       await adminAPI.createDriver(form)
       setSuccess(`Driver "${form.username}" created successfully!`)
-      setForm({ username: '', email: '', password: '', phone: '', vehicle_plate: '' })
+      setForm({ name: '', username: '', email: '', password: '', vehicle_number: '' })
     } catch (err) {
       const msg = err.response?.data?.detail
       setError(typeof msg === 'string' ? msg : 'Failed to create driver.')
@@ -39,8 +39,12 @@ export default function CreateDriver() {
             {success && <div className="alert alert-success">{success}</div>}
             <form onSubmit={handleSubmit} noValidate>
               <div className="form-group">
+                <label>Full Name *</label>
+                <input name="name" value={form.name} onChange={handleChange} placeholder="e.g. Kamal Silva" autoFocus />
+              </div>
+              <div className="form-group">
                 <label>Username *</label>
-                <input name="username" value={form.username} onChange={handleChange} placeholder="e.g. driver_kamal" autoFocus />
+                <input name="username" value={form.username} onChange={handleChange} placeholder="e.g. driver_kamal" />
               </div>
               <div className="form-group">
                 <label>Email</label>
@@ -51,12 +55,8 @@ export default function CreateDriver() {
                 <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Minimum 8 characters" />
               </div>
               <div className="form-group">
-                <label>Phone Number</label>
-                <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+94 77 123 4567" />
-              </div>
-              <div className="form-group">
-                <label>Vehicle Plate</label>
-                <input name="vehicle_plate" value={form.vehicle_plate} onChange={handleChange} placeholder="e.g. WP CAB-1234" />
+                <label>Vehicle Number</label>
+                <input name="vehicle_number" value={form.vehicle_number} onChange={handleChange} placeholder="e.g. WP CAB-1234" />
               </div>
               <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? <><span className="spinner" /> Creating…</> : 'Create Driver'}

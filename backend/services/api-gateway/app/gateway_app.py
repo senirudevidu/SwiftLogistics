@@ -40,6 +40,15 @@ def extract_token(request: Request) -> str:
     return auth_header.split(" ", 1)[1]
 
 
+def require_admin(request: Request) -> dict:
+    """Extract and verify the token, then ensure the user is an admin."""
+    token = extract_token(request)
+    payload = verify_token(token)
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can perform this action")
+    return payload
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the API Gateway"}
@@ -76,10 +85,7 @@ async def register(request: Request):
     Proxies to auth-service POST /users.
     """
     # Verify admin token
-    token = extract_token(request)
-    payload = verify_token(token)
-    if payload.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can register users")
+    require_admin(request)
 
     user_data = await request.json()
     async with httpx.AsyncClient() as client:
@@ -107,6 +113,98 @@ async def get_me(request: Request):
         "role": payload.get("role"),
         "client_id": payload.get("client_id"),
     }
+
+
+# ─── Admin Routes ──────────────────────────────────────────────
+
+@app.post("/admin/clients")
+async def create_client(request: Request):
+    """
+    Admin creates a new client user.
+    Proxies to auth-service POST /users with role=client.
+    """
+    require_admin(request)
+    user_data = await request.json()
+    # Ensure the role is set to client
+    user_data["role"] = "client"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post("http://auth-service:8000/users", json=user_data)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            try:
+                data = exc.response.json()
+                raise HTTPException(status_code=exc.response.status_code, detail=data.get("detail", str(data)))
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+
+
+@app.get("/admin/clients")
+async def get_clients(request: Request):
+    """
+    Admin lists all client users.
+    Proxies to admin-service GET /clients.
+    """
+    require_admin(request)
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://admin-service:8000/clients")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching clients: {exc}")
+            return []
+
+
+@app.post("/admin/drivers")
+async def create_driver(request: Request):
+    """
+    Admin creates a new driver user.
+    Proxies to auth-service POST /users with role=driver.
+    """
+    require_admin(request)
+    user_data = await request.json()
+    # Ensure the role is set to driver
+    user_data["role"] = "driver"
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post("http://auth-service:8000/users", json=user_data)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            try:
+                data = exc.response.json()
+                raise HTTPException(status_code=exc.response.status_code, detail=data.get("detail", str(data)))
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+
+
+@app.get("/admin/drivers")
+async def get_drivers(request: Request):
+    """
+    Admin lists all driver users.
+    Proxies to admin-service GET /drivers.
+    """
+    require_admin(request)
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://admin-service:8000/drivers")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching drivers: {exc}")
+            return []
 
 
 # ─── Order Routes ───────────────────────────────────────────────
