@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import TopBar from '../../components/TopBar'
+import Sidebar from '../../components/Sidebar'
 import { useAuth } from '../../context/AuthContext'
 import { driverAPI } from '../../api'
 
@@ -22,10 +22,11 @@ export default function DriverDashboard() {
     try {
       setLoading(true)
       const res = await driverAPI.getMyOrders()
-      setOrders(res.data)
+      setOrders(Array.isArray(res.data) ? res.data : [])
     } catch (err) {
       console.error('Failed to fetch orders:', err)
       setFeedback({ type: 'error', msg: 'Failed to load your orders. Make sure you are registered as a driver.' })
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -71,51 +72,93 @@ export default function DriverDashboard() {
   const failedDeliveries = orders.filter(o => o.status === 'delivery_failed').length
 
   return (
-    <div className="dashboard-layout">
-      <TopBar />
-      <main className="dashboard-body">
-        <div className="page-title">Driver Portal</div>
-        <div className="page-subtitle">Your delivery manifest and status for today, {user?.username}</div>
+    <div className="admin-layout">
+      <Sidebar role="driver" />
+      <div className="admin-main">
+        {/* Topbar */}
+        <div className="admin-topbar">
+          <div>
+            <h1 className="admin-page-title">Driver Portal</h1>
+            <p className="admin-page-subtitle">Your delivery manifest and status for today, {user?.username}</p>
+          </div>
+          <div className="admin-topbar-actions">
+            <button className="btn-outline-accent" onClick={fetchOrders}>
+              ↻ Refresh
+            </button>
+          </div>
+        </div>
 
         {/* Stats */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Assigned</div>
-            <div className="stat-value">{totalAssigned}</div>
+        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(249,115,22,0.12)', color: 'var(--accent)' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value">{loading ? '—' : totalAssigned}</div>
+              <div className="stat-card-label">Assigned</div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-label">Pending Delivery</div>
-            <div className="stat-value">{pendingDelivery}</div>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(234,179,8,0.12)', color: '#eab308' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ color: '#eab308' }}>{loading ? '—' : pendingDelivery}</div>
+              <div className="stat-card-label">Pending</div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-label">Delivered</div>
-            <div className="stat-value">{completedDeliveries}</div>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(34,197,94,0.12)', color: '#4ade80' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ color: '#4ade80' }}>{loading ? '—' : completedDeliveries}</div>
+              <div className="stat-card-label">Delivered</div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-label">Failed</div>
-            <div className="stat-value">{failedDeliveries}</div>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ color: '#f87171' }}>{loading ? '—' : failedDeliveries}</div>
+              <div className="stat-card-label">Failed</div>
+            </div>
           </div>
         </div>
 
         {/* Feedback */}
         {feedback.msg && (
-          <div className={`alert ${feedback.type === 'error' ? 'alert-error' : 'alert-success'}`}>
-            {feedback.msg}
+          <div style={{ margin: '0 36px' }}>
+            <div className={`alert ${feedback.type === 'error' ? 'alert-error' : 'alert-success'}`}>
+              {feedback.msg}
+            </div>
           </div>
         )}
 
         {/* Orders Table */}
-        <div className="table-wrapper">
-          <div className="table-header">
-            <div className="table-title">
-              <span style={{ marginRight: 8 }}>🚚</span>
-              My Deliveries
-            </div>
-            <button className="btn-secondary" onClick={fetchOrders} style={{ fontSize: 12, padding: '6px 14px' }}>
-              ↻ Refresh
-            </button>
+        <div className="admin-card" style={{ margin: '0 36px 36px' }}>
+          <div className="admin-card-header">
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
+              🚚 My Deliveries
+            </span>
           </div>
-          <table>
+          <table className="admin-table">
             <thead>
               <tr>
                 <th>Order ID</th>
@@ -129,7 +172,8 @@ export default function DriverDashboard() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="table-empty">
-                    <div className="spinner" style={{ margin: '0 auto' }} />
+                    <span className="spinner" style={{ display: 'inline-block', marginRight: 8 }} />
+                    Loading deliveries…
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
@@ -162,8 +206,8 @@ export default function DriverDashboard() {
                         {st.canUpdate ? (
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
-                              className="btn-primary"
-                              style={{ fontSize: 11, padding: '6px 14px', textTransform: 'none', letterSpacing: 0 }}
+                              className="btn-accent"
+                              style={{ fontSize: 11, padding: '6px 14px' }}
                               onClick={() => handleMarkDelivered(order.order_id)}
                               disabled={isActionLoading}
                             >
@@ -193,7 +237,7 @@ export default function DriverDashboard() {
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

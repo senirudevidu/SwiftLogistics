@@ -245,14 +245,21 @@ export default function Login() {
             </summary>
             <div className="demo-rows">
               {[
-                { role: 'Admin', creds: 'admin / admin123', type: 'admin' },
-                { role: 'Client', creds: 'client / client123', type: 'client' },
-                { role: 'Driver', creds: 'driver / driver123', type: 'driver' },
-              ].map(({ role, creds, type }) => (
-                <div className="demo-row" key={role}>
+                { role: 'Admin',  user: 'admin',  pass: 'admin123',  type: 'admin'  },
+                { role: 'Client', user: 'client', pass: 'client123', type: 'client' },
+                { role: 'Driver', user: 'driver', pass: 'driver123', type: 'driver' },
+              ].map(({ role, user, pass, type }) => (
+                <button
+                  type="button"
+                  className="demo-row"
+                  key={role}
+                  onClick={() => { setUsername(user); setPassword(pass); }}
+                  title={`Fill ${role} credentials`}
+                >
                   <span className={`demo-badge demo-badge--${type}`}>{role}</span>
-                  <code>{creds}</code>
-                </div>
+                  <code>{user} / {pass}</code>
+                  <span className="demo-use-hint">Use ↑</span>
+                </button>
               ))}
             </div>
           </details>

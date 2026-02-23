@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminSidebar from '../../components/AdminSidebar'
+import Sidebar from '../../components/Sidebar'
 import { adminAPI } from '../../api'
 
 const IconArrowLeft = () => (
@@ -45,7 +45,7 @@ export default function CreateClient() {
 
   return (
     <div className="admin-layout">
-      <AdminSidebar />
+      <Sidebar role="admin" />
       <div className="admin-main">
 
         <div className="admin-topbar">

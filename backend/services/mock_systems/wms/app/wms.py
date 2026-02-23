@@ -14,10 +14,10 @@ def handle_client(conn, addr):
     order = json.loads(order_data.decode())
     print(f"Received order: {order}")
     for status in statuses:
+        time.sleep(5)
         update = json.dumps({"order_id": order.get("order_id"), "status": status})
         conn.sendall(update.encode())
         print(f"Sent status: {status}")
-        time.sleep(1)
     conn.close()
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

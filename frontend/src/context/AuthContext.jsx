@@ -23,8 +23,21 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     const response = await authAPI.login(username, password)
     const { access_token, role, username: uname } = response.data
-    const userData = { username: uname, role }
-    localStorage.setItem('access_token', access_token)
+
+    let userData = { username: uname, role }
+
+    if (access_token) {
+      localStorage.setItem('access_token', access_token)
+      try {
+        const meRes = await authAPI.getMe()
+        if (meRes.data?.client_id != null) {
+          userData = { ...userData, client_id: meRes.data.client_id }
+        }
+      } catch {
+        // non-critical — proceed without client_id
+      }
+    }
+
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     return userData

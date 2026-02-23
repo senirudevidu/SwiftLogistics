@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import TopBar from '../../components/TopBar'
+import Sidebar from '../../components/Sidebar'
 import { useAuth } from '../../context/AuthContext'
 import { orderAPI } from '../../api'
 
@@ -24,9 +24,10 @@ export default function ClientDashboard() {
     try {
       setLoading(true)
       const res = await orderAPI.getMyOrders()
-      setOrders(res.data)
+      setOrders(Array.isArray(res.data) ? res.data : [])
     } catch (err) {
       console.error('Failed to fetch orders:', err)
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -67,35 +68,65 @@ export default function ClientDashboard() {
   const deliveredOrders = orders.filter(o => o.status === 'delivered').length
 
   return (
-    <div className="dashboard-layout">
-      <TopBar />
-      <main className="dashboard-body">
-        <div className="page-title">Welcome, {user?.username}</div>
-        <div className="page-subtitle">Manage your deliveries and track orders</div>
+    <div className="admin-layout">
+      <Sidebar role="client" />
+      <div className="admin-main">
+        {/* Topbar */}
+        <div className="admin-topbar">
+          <div>
+            <h1 className="admin-page-title">Dashboard</h1>
+            <p className="admin-page-subtitle">Welcome back, {user?.username} — manage your deliveries and track orders.</p>
+          </div>
+        </div>
 
         {/* Stats */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Total Orders</div>
-            <div className="stat-value">{totalOrders}</div>
+        <div className="stats-row">
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(249,115,22,0.12)', color: 'var(--accent)' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value">{loading ? '—' : totalOrders}</div>
+              <div className="stat-card-label">Total Orders</div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-label">Active</div>
-            <div className="stat-value">{activeOrders}</div>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(234,179,8,0.12)', color: '#eab308' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ color: '#eab308' }}>{loading ? '—' : activeOrders}</div>
+              <div className="stat-card-label">Active</div>
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-label">Delivered</div>
-            <div className="stat-value">{deliveredOrders}</div>
+          <div className="stat-card-v2">
+            <div className="stat-card-icon" style={{ background: 'rgba(34,197,94,0.12)', color: '#4ade80' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div>
+              <div className="stat-card-value" style={{ color: '#4ade80' }}>{loading ? '—' : deliveredOrders}</div>
+              <div className="stat-card-label">Delivered</div>
+            </div>
           </div>
         </div>
 
         {/* New Order Form */}
-        <div className="table-wrapper" style={{ marginBottom: 24 }}>
-          <div className="table-header">
-            <div className="table-title">
-              <span style={{ marginRight: 8 }}>📦</span>
-              Place New Order
-            </div>
+        <div className="admin-card" style={{ margin: '0 36px 24px' }}>
+          <div className="admin-card-header">
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
+              📦 Place New Order
+            </span>
           </div>
           <div style={{ padding: '22px' }}>
             {error && <div className="alert alert-error">{error}</div>}
@@ -112,7 +143,7 @@ export default function ClientDashboard() {
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button type="submit" className="btn-primary" disabled={submitting}>
+                <button type="submit" className="btn-accent" disabled={submitting}>
                   {submitting ? <span className="spinner" /> : null}
                   Submit Order
                 </button>
@@ -122,17 +153,16 @@ export default function ClientDashboard() {
         </div>
 
         {/* Orders Table */}
-        <div className="table-wrapper">
-          <div className="table-header">
-            <div className="table-title">
-              <span style={{ marginRight: 8 }}>📋</span>
-              My Orders
-            </div>
-            <button className="btn-secondary" onClick={fetchOrders} style={{ fontSize: 12, padding: '6px 14px' }}>
+        <div className="admin-card" style={{ margin: '0 36px 36px' }}>
+          <div className="admin-card-header">
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
+              📋 My Orders
+            </span>
+            <button className="btn-outline-accent" onClick={fetchOrders} style={{ fontSize: 12, padding: '6px 14px' }}>
               ↻ Refresh
             </button>
           </div>
-          <table>
+          <table className="admin-table">
             <thead>
               <tr>
                 <th>Order ID</th>
@@ -146,7 +176,8 @@ export default function ClientDashboard() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="table-empty">
-                    <div className="spinner" style={{ margin: '0 auto' }} />
+                    <span className="spinner" style={{ display: 'inline-block', marginRight: 8 }} />
+                    Loading orders…
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
@@ -184,7 +215,7 @@ export default function ClientDashboard() {
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
     </div>
   )
 }
