@@ -1,25 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import DriverSidebar from '../../components/DriverSidebar'
+import Sidebar from '../../components/Sidebar'
 import ConfirmModal from '../../components/ConfirmModal'
 import Pagination from '../../components/Pagination'
+import DetailField from '../../components/DetailField'
 import { driverAPI } from '../../api'
 import { useToast } from '../../context/ToastContext'
+import { getStatusMeta } from '../../lib/status'
+import { formatDate } from '../../lib/utils'
 
 const PAGE_SIZE = 12
 
-const STATUS_META = {
-  pending:   { bg: 'rgba(234,179,8,0.12)',  color: '#eab308', label: 'Pending'   },
-  assigned:  { bg: 'rgba(99,102,241,0.12)', color: '#818cf8', label: 'Assigned'  },
-  delivered: { bg: 'rgba(34,197,94,0.12)',  color: '#4ade80', label: 'Delivered' },
-  failed:    { bg: 'rgba(239,68,68,0.12)',  color: '#f87171', label: 'Failed'    },
-}
 
-function getStatusMeta(status) {
-  return STATUS_META[status?.toLowerCase()] || {
-    bg: 'rgba(255,255,255,0.06)', color: '#8a8f9e', label: status || 'Unknown',
-  }
-}
 
 /* ── Icons ── */
 const IconSearch = () => (
@@ -70,26 +62,9 @@ const IconCalendar = () => (
   </svg>
 )
 
-function DetailField({ label, value }) {
-  return (
-    <div className="detail-field">
-      <div className="detail-field-label">{label}</div>
-      <div className="detail-field-value">{value ?? '—'}</div>
-    </div>
-  )
-}
 
-function formatDate(dateStr) {
-  if (!dateStr) return '—'
-  try {
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    }).format(new Date(dateStr))
-  } catch {
-    return dateStr
-  }
-}
+
+
 
 export default function DriverJobs() {
   const [jobs, setJobs]                     = useState([])
@@ -189,8 +164,7 @@ export default function DriverJobs() {
 
   return (
     <div className="admin-layout">
-      <DriverSidebar />
-
+      <Sidebar role="driver" />
       <div className="admin-main">
         {/* ── Topbar ── */}
         <div className="admin-topbar">

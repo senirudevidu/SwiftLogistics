@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import DriverSidebar from '../../components/DriverSidebar'
+import Sidebar from '../../components/Sidebar'
 import { driverAPI } from '../../api'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../context/ToastContext'
+import { getStatusMeta, STATUS_META } from '../../lib/status'
 
 /* ── Icons ── */
 const IconRefresh = () => (
@@ -52,16 +52,7 @@ const IconPackage = () => (
   </svg>
 )
 
-const STATUS_META = {
-  pending:   { bg: 'rgba(234,179,8,0.12)',  color: '#eab308', label: 'Pending'   },
-  assigned:  { bg: 'rgba(99,102,241,0.12)', color: '#818cf8', label: 'Assigned'  },
-  delivered: { bg: 'rgba(34,197,94,0.12)',  color: '#4ade80', label: 'Delivered' },
-  failed:    { bg: 'rgba(239,68,68,0.12)',  color: '#f87171', label: 'Failed'    },
-}
 
-function getStatusMeta(status) {
-  return STATUS_META[status?.toLowerCase()] || { bg: 'rgba(255,255,255,0.06)', color: '#8a8f9e', label: status || '—' }
-}
 
 function SkeletonCard() {
   return (
@@ -97,7 +88,6 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { toast } = useToast()
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -122,7 +112,7 @@ export default function DriverDashboard() {
 
   return (
     <div className="admin-layout">
-      <DriverSidebar />
+      <Sidebar role="driver" />
       <div className="admin-main">
 
         {/* ── Topbar ── */}
@@ -136,7 +126,7 @@ export default function DriverDashboard() {
           <div className="admin-topbar-actions">
             <button
               className="btn-icon-outline"
-              onClick={() => { load(); toast('Refreshed', 'success', 2000) }}
+              onClick={() => load()}
               aria-label="Refresh"
               title="Refresh"
             >
