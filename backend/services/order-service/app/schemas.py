@@ -14,3 +14,7 @@ class AssignDriver(BaseModel):
     order_id: int
     driver_id: int
 
+class UpdateDeliveryStatus(BaseModel):
+    order_id: int
+    driver_id: int
+    status: str  # "delivered" or "delivery_failed"

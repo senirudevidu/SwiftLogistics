@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession # type: ignore
 from sqlalchemy import select # type: ignore
 from typing import List
 import logging
-from app.schemas import CreateOrder, UpdateOrderStatus, AssignDriver
+from app.schemas import CreateOrder, UpdateOrderStatus, AssignDriver, UpdateDeliveryStatus
 
 from app.database import SessionLocal, engine
 from app.models import Order, Base
@@ -80,4 +80,62 @@ async def assign_driver(data: AssignDriver, db: AsyncSession = Depends(get_db)):
     await db.refresh(order)
     logger.info(f"Order {data.order_id} assigned to driver: {data.driver_id}")
     return {"message": f"Order {data.order_id} assigned to driver {data.driver_id}"}
+
+@app.get("/orders/client/{client_id}")
+async def get_client_orders(client_id: int, db: AsyncSession = Depends(get_db)):
+    """Get all orders for a specific client"""
+    result = await db.execute(
+        select(Order).where(Order.client_id == client_id).order_by(Order.created_at.desc())
+    )
+    orders = result.scalars().all()
+    return [
+        {
+            "order_id": o.order_id,
+            "client_id": o.client_id,
+            "driver_id": o.driver_id,
+            "delivery_address": o.delivery_address,
+            "status": o.status,
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "updated_at": o.updated_at.isoformat() if o.updated_at else None,
+        }
+        for o in orders
+    ]
+
+@app.get("/orders/driver/{driver_id}")
+async def get_driver_orders(driver_id: int, db: AsyncSession = Depends(get_db)):
+    """Get all orders assigned to a specific driver"""
+    result = await db.execute(
+        select(Order).where(Order.driver_id == driver_id).order_by(Order.created_at.desc())
+    )
+    orders = result.scalars().all()
+    return [
+        {
+            "order_id": o.order_id,
+            "client_id": o.client_id,
+            "driver_id": o.driver_id,
+            "delivery_address": o.delivery_address,
+            "status": o.status,
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "updated_at": o.updated_at.isoformat() if o.updated_at else None,
+        }
+        for o in orders
+    ]
+
+@app.put("/update-delivery-status")
+async def update_delivery_status(data: UpdateDeliveryStatus, db: AsyncSession = Depends(get_db)):
+    """Driver marks order as delivered or delivery_failed"""
+    if data.status not in ["delivered", "delivery_failed"]:
+        raise HTTPException(status_code=400, detail="Status must be 'delivered' or 'delivery_failed'")
+    result = await db.execute(select(Order).where(Order.order_id == data.order_id))
+    order = result.scalar_one_or_none()
+    if not order:
+        raise HTTPException(status_code=404, detail=f"Order {data.order_id} not found")
+    if order.driver_id != data.driver_id:
+        raise HTTPException(status_code=403, detail="This order is not assigned to you")
+    order.status = data.status
+    await db.commit()
+    await db.refresh(order)
+    logger.info(f"Order {data.order_id} delivery status updated to: {data.status} by driver {data.driver_id}")
+    return {"message": f"Order {data.order_id} marked as {data.status}"}
+
 

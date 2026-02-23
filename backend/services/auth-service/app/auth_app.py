@@ -112,14 +112,21 @@ async def create_user(user: UserCreate):
         try:
             resp = requests.post("http://driver-service:8000/users", json={"name": user.name, "email": user.email, "vehicle_number": user.vehicle_number})
             resp.raise_for_status()
-            logger.info(f"Driver service response: {resp.json()}")
+            driver_data = resp.json()
+            logger.info(f"Driver service response: {driver_data}")
+            # Extract driver_id from driver service response
+            if "driver_id" in driver_data:
+                driver_id = driver_data["driver_id"]
+                logger.info(f"Extracted driver_id: {driver_id}")
         except Exception as e:
             logger.error(f"Error creating driver: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to create driver: {str(e)}")
 
-    # Store client_id in the users table if applicable
+    # Store client_id / driver_id in the users table if applicable
     if client_id is not None:
         new_user.client_id = client_id
+    if driver_id is not None:
+        new_user.driver_id = driver_id
 
     async with SessionLocal() as session:
         # Check if username already exists
@@ -130,7 +137,7 @@ async def create_user(user: UserCreate):
         await session.commit()
         await session.refresh(new_user)
 
-    return {"message": f"User {new_user.username} created successfully.", "user_id": new_user.id, "client_id": client_id}
+    return {"message": f"User {new_user.username} created successfully.", "user_id": new_user.id, "client_id": client_id, "driver_id": driver_id}
 
 @app.post("/login")
 async def login(request: LoginRequest):
@@ -152,6 +159,9 @@ async def login(request: LoginRequest):
     # Include client_id for client users so orders can extract it
     if user.role == "client" and user.client_id is not None:
         payload["client_id"] = user.client_id
+    # Include driver_id for driver users so driver routes can extract it
+    if user.role == "driver" and user.driver_id is not None:
+        payload["driver_id"] = user.driver_id
 
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     

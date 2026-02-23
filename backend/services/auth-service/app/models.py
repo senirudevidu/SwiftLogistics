@@ -10,3 +10,4 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     client_id = Column(Integer, nullable=True)  # CMS client_id for client users
+    driver_id = Column(Integer, nullable=True)  # driver-service driver_id for driver users

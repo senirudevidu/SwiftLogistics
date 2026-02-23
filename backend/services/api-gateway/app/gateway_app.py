@@ -112,6 +112,7 @@ async def get_me(request: Request):
         "username": payload.get("sub"),
         "role": payload.get("role"),
         "client_id": payload.get("client_id"),
+        "driver_id": payload.get("driver_id"),
     }
 
 
@@ -247,3 +248,108 @@ async def create_order(request: Request):
             except Exception:
                 pass
             return {"error": "Failed to contact order service", "details": details or str(exc)}
+
+
+# ─── Client Order Routes ────────────────────────────────────────
+
+@app.get("/orders/my")
+async def get_my_orders(request: Request):
+    """
+    Get all orders for the logged-in client.
+    Extracts client_id from JWT and queries order service.
+    """
+    token = extract_token(request)
+    payload = verify_token(token)
+
+    if payload.get("role") != "client":
+        raise HTTPException(status_code=403, detail="Only clients can access their orders")
+
+    client_id = payload.get("client_id")
+    if client_id is None:
+        raise HTTPException(status_code=403, detail="Token does not contain client_id")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"http://order-service:8000/orders/client/{client_id}")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching client orders: {exc}")
+            return []
+
+
+# ─── Driver Routes ──────────────────────────────────────────────
+
+@app.get("/driver/orders")
+async def get_driver_orders(request: Request):
+    """
+    Get all orders assigned to the logged-in driver.
+    Extracts driver_id from JWT and queries order service.
+    """
+    token = extract_token(request)
+    payload = verify_token(token)
+
+    if payload.get("role") != "driver":
+        raise HTTPException(status_code=403, detail="Only drivers can access this route")
+
+    driver_id = payload.get("driver_id")
+    if driver_id is None:
+        raise HTTPException(status_code=403, detail="Token does not contain driver_id")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"http://order-service:8000/orders/driver/{driver_id}")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching driver orders: {exc}")
+            return []
+
+
+@app.put("/driver/orders/{order_id}/status")
+async def update_driver_order_status(order_id: int, request: Request):
+    """
+    Driver marks an order as delivered or delivery_failed.
+    Extracts driver_id from JWT for authorization.
+    """
+    token = extract_token(request)
+    payload = verify_token(token)
+
+    if payload.get("role") != "driver":
+        raise HTTPException(status_code=403, detail="Only drivers can update delivery status")
+
+    driver_id = payload.get("driver_id")
+    if driver_id is None:
+        raise HTTPException(status_code=403, detail="Token does not contain driver_id")
+
+    body = await request.json()
+    status_update = {
+        "order_id": order_id,
+        "driver_id": driver_id,
+        "status": body.get("status")
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.put(
+                "http://order-service:8000/update-delivery-status",
+                json=status_update
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            try:
+                data = exc.response.json()
+                raise HTTPException(status_code=exc.response.status_code, detail=data.get("detail", str(data)))
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error updating delivery status: {exc}")
+            raise HTTPException(status_code=500, detail=str(exc))
+

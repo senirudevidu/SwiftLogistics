@@ -38,7 +38,7 @@ async def create_user(user: UserCreate):
         session.add(new_driver)
         await session.commit()
         await session.refresh(new_driver)
-    return {"message": f"User {new_driver.name} created successfully."}
+    return {"message": f"User {new_driver.name} created successfully.", "driver_id": new_driver.driver_id}
 
 # New endpoint to get all drivers
 @app.get("/drivers")
