@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/Sidebar'
-import { clientAPI } from '../../api'
+import { orderAPI } from '../../api'
 import { useToast } from '../../context/ToastContext'
 
 const IconBack = () => (
@@ -50,7 +50,7 @@ export default function NewOrder() {
     if (!validate()) return
     setLoading(true)
     try {
-      const res = await clientAPI.createOrder({
+      const res = await orderAPI.submitOrder({
         delivery_address: form.delivery_address.trim(),
         product_id: Number(form.product_id),
       })

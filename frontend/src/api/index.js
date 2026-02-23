@@ -40,6 +40,9 @@ export const adminAPI = {
   createDriver: (data) => api.post("/admin/drivers", data),
   getClients: () => api.get("/admin/clients"),
   getDrivers: () => api.get("/admin/drivers"),
+  getOrders: () => api.get("/orders"),
+  deleteClient: (id) => api.delete(`/admin/clients/${id}`),
+  deleteDriver: (id) => api.delete(`/admin/drivers/${id}`),
 };
 
 export const orderAPI = {
@@ -47,8 +50,13 @@ export const orderAPI = {
   getMyOrders: () => api.get("/orders/my"),
 };
 
+export const clientAPI = {
+  getProfile: () => api.get("/me"),
+};
+
 export const driverAPI = {
-  getMyOrders: () => api.get("/driver/orders"),
+  getProfile: () => api.get("/me"),
+  getMyJobs: () => api.get("/driver/orders"),
   markDelivered: (orderId) =>
     api.put(`/driver/orders/${orderId}/status`, { status: "delivered" }),
   markFailed: (orderId) =>

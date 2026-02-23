@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react'
 import Sidebar from '../../components/Sidebar'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 import { driverAPI } from '../../api'
+import { getStatusMeta } from '../../lib/status'
+import { formatDate } from '../../lib/utils'
 
-const STATUS_CONFIG = {
-  pending: { label: 'Pending', className: 'status-pending', canUpdate: false },
-  processing: { label: 'Processing', className: 'status-pending', canUpdate: false },
-  dispatched: { label: 'Dispatched', className: 'status-active', canUpdate: true },
-  delivered: { label: 'Delivered', className: 'status-active', canUpdate: false },
-  delivery_failed: { label: 'Failed', className: 'status-inactive', canUpdate: false },
+const canAct = (status) => {
+  const s = status?.toLowerCase()
+  return s === 'assigned' || s === 'dispatched'
 }
 
 export default function DriverDashboard() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(null)
-  const [feedback, setFeedback] = useState({ type: '', msg: '' })
 
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const res = await driverAPI.getMyOrders()
+      const res = await driverAPI.getMyJobs()
       setOrders(Array.isArray(res.data) ? res.data : [])
-    } catch (err) {
-      console.error('Failed to fetch orders:', err)
-      setFeedback({ type: 'error', msg: 'Failed to load your orders. Make sure you are registered as a driver.' })
+    } catch {
+      toast('Failed to load your orders. Make sure you are registered as a driver.', 'error')
       setOrders([])
     } finally {
       setLoading(false)
@@ -38,13 +37,12 @@ export default function DriverDashboard() {
 
   const handleMarkDelivered = async (orderId) => {
     setActionLoading(orderId)
-    setFeedback({ type: '', msg: '' })
     try {
       await driverAPI.markDelivered(orderId)
-      setFeedback({ type: 'success', msg: `Order #${orderId} marked as delivered!` })
+      toast(`Order #${orderId} marked as delivered.`, 'success')
       fetchOrders()
     } catch (err) {
-      setFeedback({ type: 'error', msg: err.response?.data?.detail || 'Failed to update status' })
+      toast(err.response?.data?.detail || 'Failed to update status', 'error')
     } finally {
       setActionLoading(null)
     }
@@ -52,19 +50,16 @@ export default function DriverDashboard() {
 
   const handleMarkFailed = async (orderId) => {
     setActionLoading(orderId)
-    setFeedback({ type: '', msg: '' })
     try {
       await driverAPI.markFailed(orderId)
-      setFeedback({ type: 'success', msg: `Order #${orderId} marked as delivery failed.` })
+      toast(`Order #${orderId} marked as delivery failed.`, 'warning')
       fetchOrders()
     } catch (err) {
-      setFeedback({ type: 'error', msg: err.response?.data?.detail || 'Failed to update status' })
+      toast(err.response?.data?.detail || 'Failed to update status', 'error')
     } finally {
       setActionLoading(null)
     }
   }
-
-  const getStatus = (status) => STATUS_CONFIG[status] || { label: status, className: 'status-pending', canUpdate: false }
 
   const totalAssigned = orders.length
   const pendingDelivery = orders.filter(o => !['delivered', 'delivery_failed'].includes(o.status)).length
@@ -75,20 +70,21 @@ export default function DriverDashboard() {
     <div className="admin-layout">
       <Sidebar role="driver" />
       <div className="admin-main">
-        {/* Topbar */}
         <div className="admin-topbar">
           <div>
             <h1 className="admin-page-title">Driver Portal</h1>
             <p className="admin-page-subtitle">Your delivery manifest and status for today, {user?.username}</p>
           </div>
           <div className="admin-topbar-actions">
-            <button className="btn-outline-accent" onClick={fetchOrders}>
-              ↻ Refresh
+            <button className="btn-icon-outline" onClick={fetchOrders} aria-label="Refresh" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="stats-row" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
           <div className="stat-card-v2">
             <div className="stat-card-icon" style={{ background: 'rgba(249,115,22,0.12)', color: 'var(--accent)' }}>
@@ -142,21 +138,9 @@ export default function DriverDashboard() {
           </div>
         </div>
 
-        {/* Feedback */}
-        {feedback.msg && (
-          <div style={{ margin: '0 36px' }}>
-            <div className={`alert ${feedback.type === 'error' ? 'alert-error' : 'alert-success'}`}>
-              {feedback.msg}
-            </div>
-          </div>
-        )}
-
-        {/* Orders Table */}
         <div className="admin-card" style={{ margin: '0 36px 36px' }}>
           <div className="admin-card-header">
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
-              🚚 My Deliveries
-            </span>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>My Deliveries</span>
           </div>
           <table className="admin-table">
             <thead>
@@ -178,32 +162,27 @@ export default function DriverDashboard() {
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="table-empty">
-                    No deliveries assigned to you yet.
-                  </td>
+                  <td colSpan="5" className="table-empty">No deliveries assigned to you yet.</td>
                 </tr>
               ) : (
                 orders.map((order) => {
-                  const st = getStatus(order.status)
+                  const meta = getStatusMeta(order.status)
                   const isActionLoading = actionLoading === order.order_id
+                  const actionable = canAct(order.status)
                   return (
                     <tr key={order.order_id}>
-                      <td style={{ fontWeight: 600, fontFamily: 'var(--font-display)' }}>
-                        #{order.order_id}
-                      </td>
-                      <td>{order.delivery_address || '—'}</td>
                       <td>
-                        <span className={`status-pill ${st.className}`}>{st.label}</span>
+                        <span className="order-id-badge">#{order.order_id}</span>
                       </td>
-                      <td className="td-muted">
-                        {order.created_at
-                          ? new Date(order.created_at).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                          })
-                          : '—'}
-                      </td>
+                      <td className="td-muted">{order.delivery_address || '—'}</td>
                       <td>
-                        {st.canUpdate ? (
+                        <span className="status-pill-custom" style={{ background: meta.bg, color: meta.color }}>
+                          {meta.label}
+                        </span>
+                      </td>
+                      <td className="td-muted">{formatDate(order.created_at)}</td>
+                      <td>
+                        {actionable ? (
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
                               className="btn-accent"
@@ -214,7 +193,7 @@ export default function DriverDashboard() {
                               {isActionLoading ? <span className="spinner" /> : '✓ Delivered'}
                             </button>
                             <button
-                              className="btn-danger"
+                              className="btn-danger-outline"
                               style={{ fontSize: 11, padding: '6px 14px' }}
                               onClick={() => handleMarkFailed(order.order_id)}
                               disabled={isActionLoading}
@@ -224,9 +203,11 @@ export default function DriverDashboard() {
                           </div>
                         ) : (
                           <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                            {order.status === 'delivered' ? '✓ Completed' :
-                              order.status === 'delivery_failed' ? '✗ Failed' :
-                                'Awaiting dispatch'}
+                            {order.status === 'delivered'
+                              ? '✓ Completed'
+                              : order.status === 'delivery_failed'
+                                ? '✗ Failed'
+                                : 'Awaiting dispatch'}
                           </span>
                         )}
                       </td>
@@ -241,3 +222,4 @@ export default function DriverDashboard() {
     </div>
   )
 }
+
