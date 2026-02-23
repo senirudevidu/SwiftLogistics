@@ -2,33 +2,44 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+/* ── Icons ── */
 const IconDashboard = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7" rx="1.5" />
     <rect x="14" y="3" width="7" height="7" rx="1.5" />
     <rect x="14" y="14" width="7" height="7" rx="1.5" />
     <rect x="3" y="14" width="7" height="7" rx="1.5" />
   </svg>
 )
-
 const IconClients = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
     <circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 )
-
 const IconDriver = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="1" y="3" width="15" height="13" rx="1" />
     <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
     <circle cx="5.5" cy="18.5" r="2.5" />
     <circle cx="18.5" cy="18.5" r="2.5" />
   </svg>
 )
-
+const IconOrders = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+    <line x1="12" y1="22.08" x2="12" y2="12" />
+  </svg>
+)
+const IconPlus = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+)
 const IconLogout = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -37,10 +48,28 @@ const IconLogout = () => (
   </svg>
 )
 
-const navItems = [
-  { label: 'Dashboard', path: '/admin/dashboard', icon: <IconDashboard /> },
-  { label: 'Add Client', path: '/admin/create-client', icon: <IconClients /> },
-  { label: 'Add Driver', path: '/admin/create-driver', icon: <IconDriver /> },
+const NAV_SECTIONS = [
+  {
+    label: 'Platform',
+    items: [
+      { label: 'Dashboard', path: '/admin/dashboard', icon: <IconDashboard /> },
+    ],
+  },
+  {
+    label: 'Manage',
+    items: [
+      { label: 'Clients', path: '/admin/clients', icon: <IconClients /> },
+      { label: 'Drivers', path: '/admin/drivers', icon: <IconDriver />  },
+      { label: 'Orders',  path: '/admin/orders',  icon: <IconOrders />  },
+    ],
+  },
+  {
+    label: 'Quick Add',
+    items: [
+      { label: 'New Client', path: '/admin/create-client', icon: <IconPlus /> },
+      { label: 'New Driver', path: '/admin/create-driver', icon: <IconPlus /> },
+    ],
+  },
 ]
 
 export default function AdminSidebar() {
@@ -58,7 +87,7 @@ export default function AdminSidebar() {
     : 'AD'
 
   return (
-    <aside className="admin-sidebar">
+    <aside className="admin-sidebar" aria-label="Admin navigation">
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -68,19 +97,24 @@ export default function AdminSidebar() {
         <span>SwiftLogistics</span>
       </div>
 
-      <div className="sidebar-section-label">Menu</div>
-      <nav className="sidebar-nav">
-        {navItems.map(item => (
-          <button
-            key={item.path}
-            className={`sidebar-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-            onClick={() => navigate(item.path)}
-          >
-            <span className="sidebar-nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {NAV_SECTIONS.map(section => (
+        <React.Fragment key={section.label}>
+          <div className="sidebar-section-label">{section.label}</div>
+          <nav className="sidebar-nav" aria-label={section.label}>
+            {section.items.map(item => (
+              <button
+                key={item.path}
+                className={`sidebar-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={() => navigate(item.path)}
+                aria-current={location.pathname === item.path ? 'page' : undefined}
+              >
+                <span className="sidebar-nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </React.Fragment>
+      ))}
 
       <div className="sidebar-spacer" />
 
