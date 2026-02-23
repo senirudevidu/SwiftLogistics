@@ -32,7 +32,7 @@ export const authAPI = {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
   },
-  getMe: () => api.get('/users/me'),
+  getMe: () => api.get('/me'),
 }
 
 export const adminAPI = {
@@ -43,16 +43,14 @@ export const adminAPI = {
 }
 
 export const orderAPI = {
-  submitOrder: (data) => api.post('/orders', data),
+  submitOrder: (data) => api.post('/order', data),
   getMyOrders: () => api.get('/orders/my'),
-  getOrderById: (id) => api.get(`/orders/${id}`),
-  getAllOrders: () => api.get('/orders'),
 }
 
 export const driverAPI = {
-  getMyManifest: () => api.get('/driver/manifest'),
-  markDelivered: (packageId, data) => api.post(`/driver/packages/${packageId}/delivered`, data),
-  markFailed: (packageId, data) => api.post(`/driver/packages/${packageId}/failed`, data),
+  getMyOrders: () => api.get('/driver/orders'),
+  markDelivered: (orderId) => api.put(`/driver/orders/${orderId}/status`, { status: 'delivered' }),
+  markFailed: (orderId) => api.put(`/driver/orders/${orderId}/status`, { status: 'delivery_failed' }),
 }
 
 export default api
