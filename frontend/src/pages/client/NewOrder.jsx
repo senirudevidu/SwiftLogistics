@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ClientSidebar from '../../components/ClientSidebar'
+import Sidebar from '../../components/Sidebar'
 import { clientAPI } from '../../api'
 import { useToast } from '../../context/ToastContext'
 
@@ -70,8 +70,7 @@ export default function NewOrder() {
 
   return (
     <div className="admin-layout">
-      <ClientSidebar />
-
+      <Sidebar role="client" />
       <div className="admin-main">
         {/* ── Topbar ── */}
         <div className="admin-topbar">

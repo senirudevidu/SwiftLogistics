@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminSidebar from '../../components/AdminSidebar'
+import Sidebar from '../../components/Sidebar'
 import ConfirmModal from '../../components/ConfirmModal'
 import Pagination from '../../components/Pagination'
+import DetailField from '../../components/DetailField'
 import { adminAPI } from '../../api'
 import { useToast } from '../../context/ToastContext'
+import { getInitials } from '../../lib/utils'
 
 const PAGE_SIZE = 10
 
@@ -44,18 +46,7 @@ const IconRefresh = () => (
   </svg>
 )
 
-function getInitials(name) {
-  return name?.slice(0, 2).toUpperCase() || '??'
-}
 
-function DetailField({ label, value }) {
-  return (
-    <div className="detail-field">
-      <div className="detail-field-label">{label}</div>
-      <div className="detail-field-value">{value ?? '—'}</div>
-    </div>
-  )
-}
 
 export default function Clients() {
   const [clients, setClients] = useState([])
@@ -118,8 +109,7 @@ export default function Clients() {
 
   return (
     <div className="admin-layout">
-      <AdminSidebar />
-
+      <Sidebar role="admin" />
       <div className="admin-main">
         {/* ── Topbar ── */}
         <div className="admin-topbar">
