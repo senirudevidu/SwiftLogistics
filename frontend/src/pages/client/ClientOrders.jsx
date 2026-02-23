@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
-import ClientSidebar from '../../components/ClientSidebar'
+import Sidebar from '../../components/Sidebar'
 import Pagination from '../../components/Pagination'
+import DetailField from '../../components/DetailField'
 import { orderAPI } from '../../api'
+import { getStatusMeta } from '../../lib/status'
 
 const PAGE_SIZE = 9
 
-const STATUS_META = {
-  pending:   { bg: 'rgba(234,179,8,0.12)',   color: '#eab308', label: 'Pending'   },
-  assigned:  { bg: 'rgba(99,102,241,0.12)',  color: '#818cf8', label: 'Assigned'  },
-  delivered: { bg: 'rgba(34,197,94,0.12)',   color: '#4ade80', label: 'Delivered' },
-  failed:    { bg: 'rgba(239,68,68,0.12)',   color: '#f87171', label: 'Failed'    },
-}
 
-function getStatusMeta(status) {
-  return STATUS_META[status?.toLowerCase()] || {
-    bg: 'rgba(255,255,255,0.06)', color: '#8a8f9e', label: status || 'Unknown',
-  }
-}
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 const IconSearch = () => (
@@ -102,15 +93,7 @@ const PROGRESS_STEPS = [
   { key: 'delivered', label: 'Delivered',       desc: 'Package received'   },
 ]
 
-// ── Detail field ───────────────────────────────────────────────────────────
-function DetailField({ label, value }) {
-  return (
-    <div className="detail-field">
-      <div className="detail-field-label">{label}</div>
-      <div className="detail-field-value">{value ?? '—'}</div>
-    </div>
-  )
-}
+
 
 // ── Order progress timeline ────────────────────────────────────────────────
 function OrderTimeline({ status }) {
@@ -397,8 +380,7 @@ export default function ClientOrders() {
 
   return (
     <div className="admin-layout">
-      <ClientSidebar />
-
+      <Sidebar role="client" />
       <div className="admin-main">
         {/* ── Topbar ── */}
         <div className="admin-topbar">

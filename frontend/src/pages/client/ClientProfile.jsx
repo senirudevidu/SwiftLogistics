@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import ClientSidebar from '../../components/ClientSidebar'
+import Sidebar from '../../components/Sidebar'
+import ProfileField from '../../components/ProfileField'
 import { clientAPI } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
@@ -24,47 +25,7 @@ const IconId = () => (
   </svg>
 )
 
-function ProfileField({ label, value, icon }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 16,
-      padding: '16px 20px',
-      borderBottom: '1px solid var(--border)',
-    }}>
-      <div style={{
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        background: 'rgba(249,115,22,0.1)',
-        color: 'var(--accent)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        {icon}
-      </div>
-      <div>
-        <div style={{
-          fontSize: 10.5,
-          fontFamily: 'var(--font-display)',
-          fontWeight: 600,
-          letterSpacing: '0.07em',
-          textTransform: 'uppercase',
-          color: 'var(--text-muted)',
-          marginBottom: 3,
-        }}>
-          {label}
-        </div>
-        <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>
-          {value ?? '—'}
-        </div>
-      </div>
-    </div>
-  )
-}
+
 
 export default function ClientProfile() {
   const [profile, setProfile] = useState(null)
@@ -93,8 +54,7 @@ export default function ClientProfile() {
 
   return (
     <div className="admin-layout">
-      <ClientSidebar />
-
+      <Sidebar role="client" />
       <div className="admin-main">
         {/* ── Topbar ── */}
         <div className="admin-topbar">

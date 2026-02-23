@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ClientSidebar from '../../components/ClientSidebar'
+import Sidebar from '../../components/Sidebar'
 import { orderAPI } from '../../api'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../context/ToastContext'
+import { getStatusMeta } from '../../lib/status'
 
 const IconPlus = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -42,23 +42,13 @@ const IconXCircle = () => (
   </svg>
 )
 
-const STATUS_META = {
-  pending:   { bg: 'rgba(234,179,8,0.12)',  color: '#eab308', label: 'Pending'   },
-  assigned:  { bg: 'rgba(99,102,241,0.12)', color: '#818cf8', label: 'Assigned'  },
-  delivered: { bg: 'rgba(34,197,94,0.12)',  color: '#4ade80', label: 'Delivered' },
-  failed:    { bg: 'rgba(239,68,68,0.12)',  color: '#f87171', label: 'Failed'    },
-}
 
-function getStatusMeta(status) {
-  return STATUS_META[status?.toLowerCase()] || { bg: 'rgba(255,255,255,0.06)', color: '#8a8f9e', label: status || '—' }
-}
 
 export default function ClientDashboard() {
   const [orders, setOrders]   = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { toast } = useToast()
 
   useEffect(() => {
     const load = async () => {
@@ -83,7 +73,7 @@ export default function ClientDashboard() {
 
   return (
     <div className="admin-layout">
-      <ClientSidebar />
+      <Sidebar role="client" />
       <div className="admin-main">
 
         {/* ── Topbar ── */}
