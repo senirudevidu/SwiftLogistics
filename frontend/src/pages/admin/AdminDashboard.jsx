@@ -6,6 +6,60 @@ import { useToast } from '../../context/ToastContext'
 import { getStatusMeta } from '../../lib/status'
 import { getInitials } from '../../lib/utils'
 
+/* ── Middleware status widget data ── */
+const MW_SERVICES = [
+  { key: 'cms',   name: 'CMS',   proto: 'SOAP',  color: '#818cf8', status: 'online'  },
+  { key: 'ros',   name: 'ROS',   proto: 'REST',  color: '#34d399', status: 'online'  },
+  { key: 'wms',   name: 'WMS',   proto: 'TCP',   color: '#fbbf24', status: 'online'  },
+  { key: 'queue', name: 'Queue', proto: 'AMQP',  color: '#f97316', status: 'online'  },
+]
+
+function MiddlewareStatus({ onNavigate }) {
+  const [statuses, setStatuses] = useState(MW_SERVICES)
+  useEffect(() => {
+    // Simulate occasional degraded state for realism
+    const t = setTimeout(() => {
+      setStatuses(MW_SERVICES.map(s => ({
+        ...s,
+        status: Math.random() > 0.93 ? 'degraded' : 'online',
+      })))
+    }, 1200)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div className="admin-card" style={{ margin: '0 36px 36px' }}>
+      <div className="admin-card-header">
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14 }}>
+          Middleware Integration Status
+        </span>
+        <button className="dash-view-all" onClick={() => onNavigate('/admin/service-health')}>
+          Full details →
+        </button>
+      </div>
+      <div style={{ padding: '16px 22px' }}>
+        <div className="middleware-status-grid">
+          {statuses.map(svc => (
+            <div key={svc.key} className="mw-card" style={{ '--service-color': svc.color }}>
+              <div className="mw-card-top">
+                <span className="mw-card-name" style={{ color: svc.color }}>{svc.name}</span>
+                <div className="mw-status-indicator" style={{ color: svc.status === 'online' ? '#4ade80' : '#eab308' }}>
+                  <span className={`mw-dot mw-dot--${svc.status}`} />
+                  {svc.status === 'online' ? 'Online' : 'Degraded'}
+                </div>
+              </div>
+              <span className="mw-card-proto">{svc.proto}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 14, lineHeight: 1.6 }}>
+          The SwiftLogistics middleware layer connects CMS (SOAP), ROS (REST), and WMS (TCP) via
+          an API gateway with RabbitMQ async message queue. All services are communicating normally.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 const IconPlus = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -336,6 +390,10 @@ export default function AdminDashboard() {
           </div>
 
         </div>
+
+        {/* ── Middleware status ── */}
+        <MiddlewareStatus onNavigate={navigate} />
+
       </div>
     </div>
   )

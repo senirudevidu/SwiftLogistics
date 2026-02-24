@@ -18,6 +18,14 @@ import ClientProfile from './pages/client/ClientProfile'
 import DriverDashboard from './pages/driver/DriverDashboard'
 import DriverJobs from './pages/driver/DriverJobs'
 import DriverProfile from './pages/driver/DriverProfile'
+import NotFound from './pages/NotFound'
+import ServiceHealth from './pages/admin/ServiceHealth'
+import SystemLogs from './pages/admin/SystemLogs'
+import RouteReassignment from './pages/admin/RouteReassignment'
+import OrderTracking from './pages/client/OrderTracking'
+import BillingOverview from './pages/client/BillingOverview'
+import RouteView from './pages/driver/RouteView'
+import ProofOfDelivery from './pages/driver/ProofOfDelivery'
 
 const Admin = ({ children }) => (
   <ProtectedRoute allowedRoles={['admin']}>{children}</ProtectedRoute>
@@ -52,14 +60,25 @@ export default function App() {
             <Route path="/client/new-order" element={<Client><NewOrder /></Client>} />
             <Route path="/client/profile"   element={<Client><ClientProfile /></Client>} />
 
+            {/* Admin — new */}
+            <Route path="/admin/service-health"     element={<Admin><ServiceHealth /></Admin>} />
+            <Route path="/admin/logs"               element={<Admin><SystemLogs /></Admin>} />
+            <Route path="/admin/route-reassignment" element={<Admin><RouteReassignment /></Admin>} />
+
+            {/* Client — new */}
+            <Route path="/client/tracking" element={<Client><OrderTracking /></Client>} />
+            <Route path="/client/billing"  element={<Client><BillingOverview /></Client>} />
+
             {/* Driver */}
-            <Route path="/driver/dashboard" element={<Driver><DriverDashboard /></Driver>} />
-            <Route path="/driver/jobs"      element={<Driver><DriverJobs /></Driver>} />
-            <Route path="/driver/profile"   element={<Driver><DriverProfile /></Driver>} />
+            <Route path="/driver/dashboard"          element={<Driver><DriverDashboard /></Driver>} />
+            <Route path="/driver/jobs"               element={<Driver><DriverJobs /></Driver>} />
+            <Route path="/driver/profile"            element={<Driver><DriverProfile /></Driver>} />
+            <Route path="/driver/route-view"         element={<Driver><RouteView /></Driver>} />
+            <Route path="/driver/proof-of-delivery"  element={<Driver><ProofOfDelivery /></Driver>} />
 
             {/* Fallback */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </ToastProvider>
