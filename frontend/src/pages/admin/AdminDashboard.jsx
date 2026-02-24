@@ -49,13 +49,13 @@ const IconPackage = () => (
 
 
 export default function AdminDashboard() {
-  const [clients, setClients]             = useState([])
-  const [drivers, setDrivers]             = useState([])
-  const [orders, setOrders]               = useState([])
-  const [loading, setLoading]             = useState(true)
+  const [clients, setClients] = useState([])
+  const [drivers, setDrivers] = useState([])
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
   const [ordersUnavailable, setOrdersUnavailable] = useState(false)
-  const [activeTab, setActiveTab]         = useState('clients')
-  const [search, setSearch]               = useState('')
+  const [activeTab, setActiveTab] = useState('clients')
+  const [search, setSearch] = useState('')
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -306,7 +306,13 @@ export default function AdminDashboard() {
                   return (
                     <div key={o.order_id} className="recent-order-row" onClick={() => navigate('/admin/orders')}>
                       <div className="recent-order-id">#{o.order_id}</div>
-                      <div className="recent-order-addr">{o.delivery_address}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="recent-order-addr">{o.delivery_address}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {o.client_name || o.client_username || 'Unknown'} (ID: {o.client_id})
+                          {o.driver_id ? ` → ${o.driver_name || o.driver_username || 'Unknown'} (ID: ${o.driver_id})` : ''}
+                        </div>
+                      </div>
                       <span className="status-pill-custom" style={{ background: meta.bg, color: meta.color, flexShrink: 0 }}>
                         {meta.label}
                       </span>

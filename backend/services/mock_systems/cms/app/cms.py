@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Request, HTTPException # type: ignore
+from fastapi import FastAPI, Request, HTTPException, Depends # type: ignore
 from fastapi.responses import Response # type: ignore
 import logging
 import xml.etree.ElementTree as ET
+
+from sqlalchemy.future import select
 
 from app.database import SessionLocal, engine
 from app.models import Clients, Base
@@ -119,3 +121,19 @@ async def create_user_soap(request: Request):
             media_type="application/soap+xml; charset=utf-8",
             status_code=400
         )
+
+
+@app.get("/clients")
+async def get_clients():
+    """REST endpoint to list all clients stored in the CMS."""
+    async with SessionLocal() as session:
+        result = await session.execute(select(Clients))
+        clients = result.scalars().all()
+        return [
+            {
+                "client_id": c.client_id,
+                "name": c.name,
+                "email": c.email,
+            }
+            for c in clients
+        ]

@@ -193,6 +193,7 @@ async def list_users(role: Optional[str] = Query(None)):
                 "username": u.username,
                 "role": u.role,
                 "client_id": u.client_id,
+                "driver_id": u.driver_id,
                 "is_active": True,
             }
             for u in users

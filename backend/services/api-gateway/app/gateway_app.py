@@ -208,6 +208,44 @@ async def get_drivers(request: Request):
             return []
 
 
+@app.get("/orders")
+async def get_all_orders(request: Request):
+    """
+    Admin lists all orders.
+    Proxies to admin-service GET /orders.
+    """
+    require_admin(request)
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://admin-service:8000/orders")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching orders: {exc}")
+            return []
+
+
+@app.get("/admin/orders")
+async def get_all_orders_admin(request: Request):
+    """
+    Admin lists all orders (alias for /orders).
+    Proxies to admin-service GET /orders.
+    """
+    require_admin(request)
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get("http://admin-service:8000/orders")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+        except Exception as exc:
+            logger.error(f"Error fetching orders: {exc}")
+            return []
+
+
 # ─── Order Routes ───────────────────────────────────────────────
 
 @app.post("/order")

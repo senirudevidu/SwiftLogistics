@@ -55,6 +55,26 @@ async def create_order(order: CreateOrder, db: AsyncSession = Depends(get_db)):
     })
     return {"message": "Order created successfully", "order_id": new_order.order_id}
 
+@app.get("/orders")
+async def get_all_orders(db: AsyncSession = Depends(get_db)):
+    """Get all orders (for admin dashboard)"""
+    result = await db.execute(
+        select(Order).order_by(Order.created_at.desc())
+    )
+    orders = result.scalars().all()
+    return [
+        {
+            "order_id": o.order_id,
+            "client_id": o.client_id,
+            "driver_id": o.driver_id,
+            "delivery_address": o.delivery_address,
+            "status": o.status,
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "updated_at": o.updated_at.isoformat() if o.updated_at else None,
+        }
+        for o in orders
+    ]
+
 @app.put("/update-status")
 async def update_order_status(data: UpdateOrderStatus, db: AsyncSession = Depends(get_db)):
     """Update order status (called by WMS Adapter)"""

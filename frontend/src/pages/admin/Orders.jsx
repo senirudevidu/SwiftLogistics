@@ -73,7 +73,7 @@ export default function Orders() {
       const s = o.status?.toLowerCase() || 'unknown'
       return { ...acc, [s]: (acc[s] || 0) + 1 }
     }, {}),
-  [orders])
+    [orders])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -91,11 +91,11 @@ export default function Orders() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const filterOptions = [
-    { value: 'all',       label: 'All',       count: orders.length },
-    { value: 'pending',   label: 'Pending',   count: statusCounts.pending   || 0 },
-    { value: 'assigned',  label: 'Assigned',  count: statusCounts.assigned  || 0 },
+    { value: 'all', label: 'All', count: orders.length },
+    { value: 'pending', label: 'Pending', count: statusCounts.pending || 0 },
+    { value: 'assigned', label: 'Assigned', count: statusCounts.assigned || 0 },
     { value: 'delivered', label: 'Delivered', count: statusCounts.delivered || 0 },
-    { value: 'failed',    label: 'Failed',    count: statusCounts.failed    || 0 },
+    { value: 'failed', label: 'Failed', count: statusCounts.failed || 0 },
   ]
 
   return (
@@ -171,8 +171,8 @@ export default function Orders() {
             <thead>
               <tr>
                 <th>Order ID</th>
-                <th>Client ID</th>
-                <th>Driver ID</th>
+                <th>Client</th>
+                <th>Driver</th>
                 <th>Delivery Address</th>
                 <th>Status</th>
               </tr>
@@ -231,8 +231,26 @@ export default function Orders() {
                     <td>
                       <span className="order-id-badge">#{o.order_id}</span>
                     </td>
-                    <td className="td-muted">{o.client_id}</td>
-                    <td className="td-muted">{o.driver_id ?? '—'}</td>
+                    <td>
+                      <div style={{ lineHeight: 1.4 }}>
+                        <div style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {o.client_name || o.client_username || 'Unknown'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ID: {o.client_id}</div>
+                      </div>
+                    </td>
+                    <td>
+                      {o.driver_id ? (
+                        <div style={{ lineHeight: 1.4 }}>
+                          <div style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 13 }}>
+                            {o.driver_name || o.driver_username || 'Unknown'}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ID: {o.driver_id}</div>
+                        </div>
+                      ) : (
+                        <span className="td-muted" style={{ fontStyle: 'italic' }}>—</span>
+                      )}
+                    </td>
                     <td className="td-muted td-truncate" title={o.delivery_address}>{o.delivery_address}</td>
                     <td>
                       <span className="status-pill-custom" style={{ background: meta.bg, color: meta.color }}>
@@ -279,7 +297,9 @@ export default function Orders() {
             <div className="detail-section-label">Order info</div>
             <div className="detail-fields">
               <DetailField label="Order ID" value={`#${selected.order_id}`} />
+              <DetailField label="Client Name" value={selected.client_name || selected.client_username || 'Unknown'} />
               <DetailField label="Client ID" value={selected.client_id} />
+              <DetailField label="Driver Name" value={selected.driver_id ? (selected.driver_name || selected.driver_username || 'Unknown') : 'Not assigned'} />
               <DetailField label="Driver ID" value={selected.driver_id ?? 'Not assigned'} />
               <DetailField label="Status" value={meta.label} />
             </div>
