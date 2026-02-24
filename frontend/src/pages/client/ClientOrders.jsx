@@ -372,8 +372,6 @@ export default function ClientOrders() {
   ]
 
   const STAT_CARDS = [
-    { key: 'pending',   icon: <IconClock />       },
-    { key: 'assigned',  icon: <IconUserCheck />   },
     { key: 'delivered', icon: <IconCheckCircle /> },
     { key: 'failed',    icon: <IconXCircle />     },
   ]
@@ -431,7 +429,7 @@ export default function ClientOrders() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(4, 1fr)', padding: '20px 36px' }}>
+        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)', padding: '20px 36px' }}>
           {STAT_CARDS.map(({ key, icon }) => {
             const meta   = getStatusMeta(key)
             const active = statusFilter === key
