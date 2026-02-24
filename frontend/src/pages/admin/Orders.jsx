@@ -116,8 +116,8 @@ export default function Orders() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(4, 1fr)', padding: '20px 36px' }}>
-          {['pending', 'assigned', 'delivered', 'failed'].map(s => {
+        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)', padding: '20px 36px' }}>
+          {['delivered', 'failed'].map(s => {
             const meta = getStatusMeta(s)
             return (
               <div
