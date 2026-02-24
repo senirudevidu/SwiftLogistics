@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useLocation } from 'react-router-dom'
-import Sidebar from '../../components/Sidebar'
+import { useLocation, useNavigate } from 'react-router-dom'
+import AppLayout from '../../layouts/AppLayout'
 import Pagination from '../../components/Pagination'
 import DetailField from '../../components/DetailField'
 import { orderAPI } from '../../api'
 import { getStatusMeta } from '../../lib/status'
+import { formatDate } from '../../lib/utils'
 
 const PAGE_SIZE = 9
 
@@ -364,22 +365,23 @@ export default function ClientOrders() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const filterOptions = [
-    { value: 'all',       label: 'All',       count: orders.length },
-    { value: 'pending',   label: 'Pending',   count: statusCounts.pending   || 0 },
-    { value: 'assigned',  label: 'Assigned',  count: statusCounts.assigned  || 0 },
-    { value: 'delivered', label: 'Delivered', count: statusCounts.delivered || 0 },
-    { value: 'failed',    label: 'Failed',    count: statusCounts.failed    || 0 },
+    { value: 'all',        label: 'All',        count: orders.length },
+    { value: 'pending',    label: 'Pending',    count: statusCounts.pending     || 0 },
+    { value: 'assigned',   label: 'Assigned',   count: statusCounts.assigned    || 0 },
+    { value: 'dispatched', label: 'Dispatched', count: statusCounts.dispatched  || 0 },
+    { value: 'delivered',  label: 'Delivered',  count: statusCounts.delivered   || 0 },
+    { value: 'failed',     label: 'Failed',     count: (statusCounts.failed || 0) + (statusCounts.delivery_failed || 0) },
   ]
 
   const STAT_CARDS = [
-    { key: 'delivered', icon: <IconCheckCircle /> },
-    { key: 'failed',    icon: <IconXCircle />     },
+    { key: 'delivered',  icon: <IconCheckCircle /> },
+    { key: 'dispatched', icon: <IconTruck />        },
+    { key: 'failed',     icon: <IconXCircle />      },
   ]
 
+  const navigate = useNavigate()
   return (
-    <div className="admin-layout">
-      <Sidebar role="client" />
-      <div className="admin-main">
+    <AppLayout role="client">
         {/* ── Topbar ── */}
         <div className="admin-topbar">
           <div>
@@ -429,7 +431,7 @@ export default function ClientOrders() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)', padding: '20px 36px' }}>
+        <div className="stats-row" style={{ gridTemplateColumns: 'repeat(3, 1fr)', padding: '20px 36px' }}>
           {STAT_CARDS.map(({ key, icon }) => {
             const meta   = getStatusMeta(key)
             const active = statusFilter === key
@@ -547,6 +549,7 @@ export default function ClientOrders() {
                 <tr>
                   <th>Order ID</th>
                   <th>Delivery Address</th>
+                  <th>Product</th>
                   <th>Driver</th>
                   <th>Progress</th>
                   <th>Status</th>
@@ -585,6 +588,7 @@ export default function ClientOrders() {
                       <td className="td-muted td-truncate" title={o.delivery_address}>
                         {o.delivery_address}
                       </td>
+                      <td className="td-muted">{o.product_id ?? '—'}</td>
                       <td className="td-muted">
                         {o.driver_id
                           ? <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#818cf8' }}><IconTruck />Driver #{o.driver_id}</span>
@@ -616,7 +620,6 @@ export default function ClientOrders() {
             <Pagination page={page} totalPages={totalPages} onChange={setPage} />
           </div>
         </div>
-      </div>
 
       {/* ── Order detail drawer ── */}
       {selected && (() => {
@@ -652,22 +655,37 @@ export default function ClientOrders() {
 
             <div className="detail-section-label" style={{ marginTop: 20 }}>Delivery</div>
             <div className="detail-fields">
-              <DetailField label="Address" value={selected.delivery_address} />
+              <DetailField label="Address"    value={selected.delivery_address} />
+              <DetailField label="Product ID" value={selected.product_id != null ? `#${selected.product_id}` : '—'} />
+              <DetailField label="Placed"     value={formatDate(selected.created_at)} />
             </div>
 
             {selected.driver_id && (
               <>
                 <div className="detail-section-label" style={{ marginTop: 20 }}>Assignment</div>
                 <div className="detail-fields">
-                  <DetailField label="Driver ID" value={`#${selected.driver_id}`} />
+                  <DetailField label="Driver ID" value={`Driver #${selected.driver_id}`} />
                 </div>
               </>
             )}
 
             <OrderTimeline status={selected.status} />
+
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                className="btn-accent"
+                style={{ width: '100%', justifyContent: 'center', fontSize: 12.5 }}
+                onClick={() => navigate('/client/tracking', { state: { orderId: selected.order_id } })}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                Track this Order
+              </button>
+            </div>
           </aside>
         )
       })()}
-    </div>
+    </AppLayout>
   )
 }

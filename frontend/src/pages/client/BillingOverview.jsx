@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppLayout from '../../layouts/AppLayout'
 import { orderAPI } from '../../api'
 import { useToast } from '../../context/ToastContext'
@@ -35,6 +36,7 @@ export default function BillingOverview() {
   const [orders, setOrders]   = useState([])
   const [loading, setLoading] = useState(true)
   const { toast }             = useToast()
+  const navigate              = useNavigate()
 
   useEffect(() => {
     const load = async () => {
@@ -280,12 +282,23 @@ export default function BillingOverview() {
                   background: inv.paid ? 'rgba(34,197,94,0.1)' : 'rgba(234,179,8,0.1)',
                   color: inv.paid ? '#4ade80' : '#eab308',
                   fontSize: 10.5,
-                  marginRight: 12,
+                  marginRight: 8,
                 }}
               >
                 {inv.paid ? 'Paid' : 'Pending'}
               </span>
-              <span className="invoice-amount">{fmt(inv.total)}</span>
+              <span className="invoice-amount" style={{ marginRight: 8 }}>{fmt(inv.total)}</span>
+              <button
+                className="invoice-download-btn"
+                title="Download invoice (PDF)"
+                onClick={() => toast(`Invoice INV-${String(inv.order_id).padStart(5, '0')} — PDF export coming soon`, 'info')}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
             </div>
           ))}
         </div>

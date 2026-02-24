@@ -198,26 +198,14 @@ export default function OrderTracking() {
             Real-time delivery tracking via the ROS middleware
           </p>
         </div>
-        <div className="admin-topbar-actions">
-          <span className="live-badge" style={{ opacity: polling ? 1 : 0.4 }}>
-            <span className="live-badge-dot" />
-            {polling ? 'Live' : 'Paused'}
-          </span>
+      <div className="admin-topbar-actions">
           <button
-            className="btn-icon-outline"
+            className={`conn-pill ${polling ? 'conn-pill--live' : 'conn-pill--paused'}`}
             onClick={() => setPolling(p => !p)}
-            title={polling ? 'Pause polling' : 'Resume polling'}
+            title={polling ? 'Click to pause auto-refresh' : 'Click to resume auto-refresh'}
           >
-            {polling ? (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-            ) : (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-            )}
+            <span className="conn-dot" />
+            {polling ? 'Live — polling every 15s' : 'Paused'}
           </button>
           <button
             className="btn-icon-outline"
@@ -354,9 +342,9 @@ export default function OrderTracking() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {[
                     { label: 'Status Source', value: 'ROS → Gateway' },
-                    { label: 'Assignment', value: 'ROS REST Adapter' },
+                    { label: 'Assignment',    value: 'ROS REST Adapter' },
                     { label: 'Notifications', value: 'RabbitMQ Queue' },
-                    { label: 'Order Record', value: 'CMS SOAP + DB' },
+                    { label: 'Order Record',  value: 'CMS SOAP + DB' },
                   ].map(row => (
                     <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
                       <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{row.label}</span>
@@ -365,6 +353,52 @@ export default function OrderTracking() {
                   ))}
                 </div>
               </div>
+
+              {/* Proof of delivery preview — shown when delivered */}
+              {selected?.status?.toLowerCase() === 'delivered' && (
+                <div className="pod-preview-card">
+                  <div className="pod-preview-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" /><polyline points="9 15 11 17 15 13" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: '#4ade80', marginBottom: 3 }}>
+                      Delivery Confirmed
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                      Your package was successfully delivered. Proof of delivery has been recorded.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Next step hint — shown for active orders */}
+              {selected && !['delivered','delivery_failed','failed'].includes(selected.status?.toLowerCase()) && (
+                <div style={{
+                  padding: '12px 14px',
+                  background: 'rgba(249,115,22,0.05)',
+                  border: '1px solid rgba(249,115,22,0.2)',
+                  borderRadius: 10,
+                  fontSize: 12.5,
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.6,
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" style={{ marginTop: 2, flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>
+                    <strong style={{ color: 'var(--accent)' }}>Next step:</strong>{' '}
+                    {selected.status?.toLowerCase() === 'pending' && 'Waiting for ROS to assign a driver to your delivery.'}
+                    {selected.status?.toLowerCase() === 'assigned' && 'Driver is preparing for pickup — your order will be dispatched soon.'}
+                    {selected.status?.toLowerCase() === 'dispatched' && 'Your order is out for delivery! The driver is en route.'}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
