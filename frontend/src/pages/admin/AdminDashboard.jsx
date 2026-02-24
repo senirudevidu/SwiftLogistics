@@ -212,9 +212,12 @@ export default function AdminDashboard() {
                       <td>
                         <div className="table-user-cell">
                           <div className="table-avatar" style={{ background: 'rgba(249,115,22,0.15)', color: 'var(--accent)' }}>
-                            {getInitials(c.username)}
+                            {getInitials(c.name || c.username)}
                           </div>
-                          <span className="table-username">{c.username}</span>
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span className="table-username">{c.name || c.username}</span>
+                            {c.name && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{c.username}</div>}
+                          </div>
                         </div>
                       </td>
                       <td className="td-muted">{c.email || '—'}</td>
@@ -246,9 +249,12 @@ export default function AdminDashboard() {
                       <td>
                         <div className="table-user-cell">
                           <div className="table-avatar" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
-                            {getInitials(d.username)}
+                            {getInitials(d.name || d.username)}
                           </div>
-                          <span className="table-username">{d.username}</span>
+                          <div style={{ lineHeight: 1.4 }}>
+                            <span className="table-username">{d.name || d.username}</span>
+                            {d.name && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{d.username}</div>}
+                          </div>
                         </div>
                       </td>
                       <td className="td-muted">{d.vehicle_number || '—'}</td>

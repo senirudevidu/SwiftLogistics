@@ -77,6 +77,7 @@ export default function Drivers() {
     const q = search.toLowerCase()
     return drivers.filter(d =>
       d.username?.toLowerCase().includes(q) ||
+      d.name?.toLowerCase().includes(q) ||
       d.email?.toLowerCase().includes(q) ||
       d.vehicle_number?.toLowerCase().includes(q)
     )
@@ -181,9 +182,12 @@ export default function Drivers() {
                   <td>
                     <div className="table-user-cell">
                       <div className="table-avatar" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
-                        {getInitials(d.username)}
+                        {getInitials(d.name || d.username)}
                       </div>
-                      <span className="table-username">{d.username}</span>
+                      <div style={{ lineHeight: 1.4 }}>
+                        <div className="table-username">{d.name || d.username}</div>
+                        {d.name && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{d.username}</div>}
+                      </div>
                     </div>
                   </td>
                   <td className="td-muted">{d.email || '—'}</td>
@@ -249,9 +253,10 @@ export default function Drivers() {
 
           <div className="detail-section-label">Account info</div>
           <div className="detail-fields">
+            <DetailField label="Name" value={selected.name || '—'} />
             <DetailField label="Username" value={selected.username} />
-            <DetailField label="Email" value={selected.email} />
-            <DetailField label="Vehicle No." value={selected.vehicle_number} />
+            <DetailField label="Email" value={selected.email || '—'} />
+            <DetailField label="Vehicle No." value={selected.vehicle_number || '—'} />
             <DetailField label="Role" value="driver" />
             <DetailField label="Status" value={selected.is_active ? 'Active' : 'Inactive'} />
           </div>

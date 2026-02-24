@@ -50,11 +50,10 @@ async def init_db():
 
 @app.on_event("startup")
 async def on_startup():
-    # Drop and recreate database tables (for development)
+    # Create database tables if they don't exist (preserves existing data)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    logging.info("Database tables recreated successfully.")
+    logging.info("Database tables verified/created successfully.")
 
     # Add default users for admin, client, and driver dashboards
     async with SessionLocal() as session:

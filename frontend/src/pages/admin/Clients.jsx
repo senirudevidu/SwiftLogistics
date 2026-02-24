@@ -77,6 +77,7 @@ export default function Clients() {
     const q = search.toLowerCase()
     return clients.filter(c =>
       c.username?.toLowerCase().includes(q) ||
+      c.name?.toLowerCase().includes(q) ||
       c.email?.toLowerCase().includes(q) ||
       String(c.client_id ?? '').includes(q)
     )
@@ -181,9 +182,12 @@ export default function Clients() {
                   <td>
                     <div className="table-user-cell">
                       <div className="table-avatar" style={{ background: 'rgba(249,115,22,0.15)', color: 'var(--accent)' }}>
-                        {getInitials(c.username)}
+                        {getInitials(c.name || c.username)}
                       </div>
-                      <span className="table-username">{c.username}</span>
+                      <div style={{ lineHeight: 1.4 }}>
+                        <div className="table-username">{c.name || c.username}</div>
+                        {c.name && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{c.username}</div>}
+                      </div>
                     </div>
                   </td>
                   <td className="td-muted">{c.email || '—'}</td>
@@ -249,8 +253,9 @@ export default function Clients() {
 
           <div className="detail-section-label">Account info</div>
           <div className="detail-fields">
+            <DetailField label="Name" value={selected.name || '—'} />
             <DetailField label="Username" value={selected.username} />
-            <DetailField label="Email" value={selected.email} />
+            <DetailField label="Email" value={selected.email || '—'} />
             <DetailField label="Client ID" value={selected.client_id} />
             <DetailField label="Role" value="client" />
             <DetailField label="Status" value={selected.is_active ? 'Active' : 'Inactive'} />

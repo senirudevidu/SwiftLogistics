@@ -53,39 +53,86 @@ async def register_user(request: Request):
 @app.get("/clients")
 async def get_clients():
     """
-    List all client users from the auth-service users table.
-    Proxies to auth-service GET /users?role=client.
+    List all client users.
+    Fetches user accounts from auth-service and enriches with
+    actual client names/emails from CMS mock.
     """
     async with httpx.AsyncClient() as client:
+        # Fetch client users from auth-service
         try:
             response = await client.get("http://auth-service:8000/users", params={"role": "client"})
             response.raise_for_status()
-            return response.json()
+            clients_list = response.json()
         except httpx.HTTPStatusError as exc:
-            logger.error(f"Error fetching clients: {exc}")
+            logger.error(f"Error fetching clients from auth: {exc}")
             raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
         except Exception as exc:
-            logger.error(f"Error fetching clients: {exc}")
+            logger.error(f"Error fetching clients from auth: {exc}")
             return []
+
+        # Fetch actual client details from CMS mock (name, email)
+        cms_map = {}  # client_id -> {name, email}
+        try:
+            cms_resp = await client.get("http://cms-mock:8200/clients")
+            cms_resp.raise_for_status()
+            for c in cms_resp.json():
+                cms_map[c["client_id"]] = {"name": c.get("name"), "email": c.get("email")}
+        except Exception as exc:
+            logger.warning(f"Could not fetch clients from CMS: {exc}")
+
+        # Enrich each client user with CMS data
+        for u in clients_list:
+            cid = u.get("client_id")
+            cms_data = cms_map.get(cid, {})
+            u["name"] = cms_data.get("name")
+            u["email"] = cms_data.get("email")
+
+        return clients_list
 
 
 @app.get("/drivers")
 async def get_drivers():
     """
-    List all driver users from the auth-service users table.
-    Proxies to auth-service GET /users?role=driver.
+    List all driver users.
+    Fetches user accounts from auth-service and enriches with
+    actual driver details (name, email, vehicle_number) from driver-service.
     """
     async with httpx.AsyncClient() as client:
+        # Fetch driver users from auth-service
         try:
             response = await client.get("http://auth-service:8000/users", params={"role": "driver"})
             response.raise_for_status()
-            return response.json()
+            drivers_list = response.json()
         except httpx.HTTPStatusError as exc:
-            logger.error(f"Error fetching drivers: {exc}")
+            logger.error(f"Error fetching drivers from auth: {exc}")
             raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
         except Exception as exc:
-            logger.error(f"Error fetching drivers: {exc}")
+            logger.error(f"Error fetching drivers from auth: {exc}")
             return []
+
+        # Fetch actual driver details from driver-service (name, email, vehicle_number)
+        driver_map = {}  # driver_id -> {name, email, vehicle_number}
+        try:
+            drv_resp = await client.get("http://driver-service:8000/drivers")
+            drv_resp.raise_for_status()
+            for d in drv_resp.json():
+                driver_map[d["driver_id"]] = {
+                    "name": d.get("name"),
+                    "email": d.get("email"),
+                    "vehicle_number": d.get("vehicle_number"),
+                }
+        except Exception as exc:
+            logger.warning(f"Could not fetch drivers from driver-service: {exc}")
+
+        # Enrich each driver user with driver-service data
+        for u in drivers_list:
+            did = u.get("driver_id")
+            drv_data = driver_map.get(did, {})
+            u["name"] = drv_data.get("name")
+            u["email"] = drv_data.get("email")
+            u["vehicle_number"] = drv_data.get("vehicle_number")
+
+        return drivers_list
 
 
 @app.get("/orders")
