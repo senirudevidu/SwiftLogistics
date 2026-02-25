@@ -255,6 +255,17 @@ const NAV_CONFIG = {
             ),
           },
           {
+            label: 'Delivery Detail',
+            path: '/driver/delivery',
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            ),
+          },
+          {
             label: 'Route View',
             path: '/driver/route-view',
             icon: (
@@ -322,17 +333,21 @@ export default function Sidebar({ role }) {
         <React.Fragment key={section.label}>
           <div className="sidebar-section-label">{section.label}</div>
           <nav className="sidebar-nav" aria-label={section.label}>
-            {section.items.map(item => (
+            {section.items.map(item => {
+              const isActive = location.pathname === item.path ||
+                (item.path !== '/' && location.pathname.startsWith(item.path + '/'))
+              return (
               <button
                 key={item.path}
-                className={`sidebar-nav-item${location.pathname === item.path ? ' active' : ''}`}
+                className={`sidebar-nav-item${isActive ? ' active' : ''}`}
                 onClick={() => navigate(item.path)}
-                aria-current={location.pathname === item.path ? 'page' : undefined}
+                aria-current={isActive ? 'page' : undefined}
               >
                 <span className="sidebar-nav-icon">{item.icon}</span>
                 <span>{item.label}</span>
               </button>
-            ))}
+            )
+            })}
           </nav>
         </React.Fragment>
       ))}

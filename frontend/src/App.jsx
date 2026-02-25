@@ -26,6 +26,7 @@ import OrderTracking from './pages/client/OrderTracking'
 import BillingOverview from './pages/client/BillingOverview'
 import RouteView from './pages/driver/RouteView'
 import ProofOfDelivery from './pages/driver/ProofOfDelivery'
+import DeliveryDetail from './pages/driver/DeliveryDetail'
 
 const Admin = ({ children }) => (
   <ProtectedRoute allowedRoles={['admin']}>{children}</ProtectedRoute>
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/driver/profile"            element={<Driver><DriverProfile /></Driver>} />
             <Route path="/driver/route-view"         element={<Driver><RouteView /></Driver>} />
             <Route path="/driver/proof-of-delivery"  element={<Driver><ProofOfDelivery /></Driver>} />
+            <Route path="/driver/delivery/:orderId"   element={<Driver><DeliveryDetail /></Driver>} />
 
             {/* Fallback */}
             <Route path="/" element={<Navigate to="/login" replace />} />
