@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/banner.png" alt="SwiftLogistics Banner" width="100%" />
+</p>
+
 # 🚚 SwiftLogistics — Middleware-Based Logistics Management Platform
 
 > A microservices-based logistics and delivery management system built with **FastAPI**, **React (Vite)**, **RabbitMQ**, **PostgreSQL**, and **Docker**. Designed for the SCS2314 Middleware Architecture course to demonstrate real-world middleware integration patterns.
@@ -44,6 +48,13 @@ Three distinct user roles interact with the platform through a unified React fro
 ---
 
 ## 🏗 Architecture
+
+<p align="center">
+  <img src="docs/images/middleware-architecture.png" alt="SwiftLogistics Middleware Architecture" width="100%" />
+</p>
+
+<details>
+<summary>📝 <strong>View ASCII Architecture Diagram</strong></summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -97,6 +108,8 @@ Three distinct user roles interact with the platform through a unified React fro
 │                     postgresql://localhost:5433                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+</details>
 
 ---
 
